@@ -57,9 +57,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BUZZER_NOTIFY_REPO: ${{ github.repository }}
         run: |
+          set +e
           uv run buzzer daily \
             ${{ inputs.date && format('--date {0}', inputs.date) || '' }} \
             --notify github
+          code=$?
+          if [ "$code" -eq 75 ]; then
+            # stats.nba.com blocks most datacenter/CI IPs. Not a bug:
+            # skip green with a visible warning instead of a daily red X.
+            echo "::warning title=Daily scan skipped::stats.nba.com is unreachable from GitHub's runners (their IPs are commonly blocked). Run 'uv run buzzer daily' from a home machine, or point this workflow at a self-hosted runner."
+            exit 0
+          fi
+          exit $code
 
       - name: Upload renders for review
         if: always()

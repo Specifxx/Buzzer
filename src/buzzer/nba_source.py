@@ -33,6 +33,15 @@ def rows_from_result_sets(payload: dict[str, Any], name: str) -> list[Row]:
     raise KeyError(f"resultSet {name!r} not found in payload")
 
 
+class SourceUnavailableError(RuntimeError):
+    """stats.nba.com could not be reached after retries.
+
+    Usually means the caller's IP range is blocked (datacenter/CI
+    runners) or the site is down — an environmental condition, not a
+    bug. Callers may treat it as "try again from somewhere else".
+    """
+
+
 class NbaApiSource:
     """DataSource implementation that talks to stats.nba.com via nba_api."""
 
@@ -66,7 +75,10 @@ class NbaApiSource:
                     backoff,
                 )
                 time.sleep(backoff)
-        raise RuntimeError(f"nba_api call failed after {self.retries} attempts") from last_error
+        raise SourceUnavailableError(
+            f"stats.nba.com unreachable after {self.retries} attempts "
+            "(their servers often block datacenter/CI IPs; try from another network)"
+        ) from last_error
 
     # -- DataSource implementation ----------------------------------------
 

@@ -417,24 +417,40 @@ def daily(
     offline: bool,
 ) -> None:
     """Morning scan: render last night's best moments, open DRAFT products,
-    and notify for approval. Never publishes anything by itself."""
+    and notify for approval. Never publishes anything by itself.
+
+    Exits 75 (temporary failure) when stats.nba.com is unreachable —
+    an environmental condition, distinct from real errors, so schedulers
+    can skip gracefully instead of alarming.
+    """
     from buzzer.daily import build_daily_client, run_daily, yesterday
+    from buzzer.nba_source import SourceUnavailableError
     from buzzer.notify import build_notifier
     from buzzer.publish import PublishState, load_config
     from buzzer.publish.config import DEFAULT_CONFIG_PATH
     from buzzer.publish.state import DEFAULT_STATE_PATH
 
-    result = run_daily(
-        date_iso or yesterday(),
-        source=build_source(cache_dir=cache_dir, offline=offline),
-        config=load_config(config_path or DEFAULT_CONFIG_PATH),
-        state=PublishState.load(state_file or DEFAULT_STATE_PATH),
-        out_dir=out_dir,
-        notifier=build_notifier(notify_channel),
-        client=None if no_drafts else build_daily_client(),
-        min_score=min_score,
-        top_per_game=top_per_game,
-    )
+    try:
+        result = run_daily(
+            date_iso or yesterday(),
+            source=build_source(cache_dir=cache_dir, offline=offline),
+            config=load_config(config_path or DEFAULT_CONFIG_PATH),
+            state=PublishState.load(state_file or DEFAULT_STATE_PATH),
+            out_dir=out_dir,
+            notifier=build_notifier(notify_channel),
+            client=None if no_drafts else build_daily_client(),
+            min_score=min_score,
+            top_per_game=top_per_game,
+        )
+    except SourceUnavailableError as exc:
+        click.echo(f"daily scan skipped: {exc}", err=True)
+        click.echo(
+            "This is an environmental condition, not a bug. Run "
+            "`uv run buzzer daily` from a home machine, or use a "
+            "self-hosted runner.",
+            err=True,
+        )
+        sys.exit(75)
     click.echo(
         f"{result.date_iso}: {result.games_scanned} game(s) scanned, "
         f"{len(result.moments)} moment(s) >= {min_score}, "

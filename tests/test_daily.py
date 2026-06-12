@@ -179,6 +179,39 @@ def test_build_notifier_uses_github_when_configured(
     assert isinstance(build_notifier("github"), GitHubIssueNotifier)
 
 
+def test_daily_cli_exits_75_when_nba_unreachable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """CI runners are often IP-blocked by stats.nba.com; the daily command
+    must signal that distinctly (exit 75) so the cron can skip green."""
+    from click.testing import CliRunner
+
+    from buzzer import cli
+    from buzzer.nba_source import SourceUnavailableError
+
+    class BlockedSource:
+        def games_for_date(self, date_iso: str) -> list[object]:
+            raise SourceUnavailableError("stats.nba.com unreachable after 3 attempts")
+
+    monkeypatch.setattr(cli, "build_source", lambda **_kw: BlockedSource())
+    result = CliRunner().invoke(
+        cli.main,
+        [
+            "daily",
+            "--date",
+            "2026-06-04",
+            "--no-drafts",
+            "--notify",
+            "log",
+            "--state-file",
+            str(tmp_path / "state.json"),
+            "--out-dir",
+            str(tmp_path),
+        ],
+    )
+    assert result.exit_code == 75, result.output
+
+
 # --- approve command ---------------------------------------------------------
 
 
