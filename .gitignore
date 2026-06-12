@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Tooling
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Buzzer runtime
+.buzzer_cache/
+catalogue/
+
+# Secrets — API keys live here, never in code
+.env
+.env.*
