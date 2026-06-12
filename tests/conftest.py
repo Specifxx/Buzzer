@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import pytest
@@ -8,6 +9,35 @@ FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 FINALS_GAME = "0042500401"  # synthetic playoff thriller (see generate_fixtures.py)
 QUIET_GAME = "0022500123"  # synthetic regular-season blowout, no moments
+
+
+def _cairo_available() -> bool:
+    """True if cairosvg can actually rasterize (system Cairo present).
+
+    On Windows without the GTK runtime the import succeeds but the first
+    render raises OSError("no library called cairo-2 was found"), so we
+    probe with a 1px render rather than trusting the import. Set
+    BUZZER_SKIP_CAIRO_TESTS=1 to force-skip the rendering tests.
+    """
+    if os.environ.get("BUZZER_SKIP_CAIRO_TESTS"):
+        return False
+    try:
+        import cairosvg
+
+        cairosvg.svg2png(
+            bytestring=b'<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>'
+        )
+    except Exception:
+        return False
+    return True
+
+
+CAIRO_AVAILABLE = _cairo_available()
+
+requires_cairo = pytest.mark.skipif(
+    not CAIRO_AVAILABLE,
+    reason="needs system Cairo (libcairo2 / GTK runtime on Windows / use WSL) to rasterize PNGs",
+)
 
 
 @pytest.fixture()

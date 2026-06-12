@@ -9,7 +9,7 @@ from buzzer.datasource import CachedSource
 from buzzer.listing import description_for, tags_for, title_for
 from buzzer.render.validate import ContentViolationError, validate_listing_text
 
-from .conftest import FINALS_GAME
+from .conftest import FINALS_GAME, requires_cairo
 from .test_render import make_facts
 
 
@@ -73,6 +73,7 @@ def test_listing_validator_rejects_marks() -> None:
 # --- catalogue build ---------------------------------------------------------
 
 
+@requires_cairo
 def test_build_catalogue_offline(source: CachedSource, tmp_path: Path) -> None:
     result = build_catalogue(
         seasons=["2024-25", "2025-26"],  # 2024-25 has no fixture data -> skipped
@@ -108,6 +109,7 @@ def test_build_catalogue_offline(source: CachedSource, tmp_path: Path) -> None:
         assert forbidden not in blob
 
 
+@requires_cairo
 def test_catalogue_rerun_is_clean(source: CachedSource, tmp_path: Path) -> None:
     out = tmp_path / "catalogue"
     for _ in range(2):

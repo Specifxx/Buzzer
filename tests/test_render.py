@@ -17,7 +17,7 @@ from buzzer.render import (
     validate_text_value,
 )
 
-from .conftest import FINALS_GAME
+from .conftest import FINALS_GAME, requires_cairo
 
 
 def make_facts(**overrides: Any) -> MomentFacts:
@@ -83,6 +83,7 @@ def test_unknown_style_or_size_rejected() -> None:
         render_svg(make_facts(), "trajectory", "11x17")
 
 
+@requires_cairo
 def test_render_moment_writes_svg_and_preview(source: CachedSource, tmp_path: Path) -> None:
     moment = find_moment(f"{FINALS_GAME}:350", source=source)
     outputs = render_moment(moment, "trajectory", "18x24", tmp_path, print_file=False)
@@ -93,6 +94,7 @@ def test_render_moment_writes_svg_and_preview(source: CachedSource, tmp_path: Pa
     assert preview.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
 
 
+@requires_cairo
 def test_print_png_is_300dpi_sized(tmp_path: Path) -> None:
     from PIL import Image
 

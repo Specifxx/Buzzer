@@ -10,7 +10,7 @@ from buzzer.publish.printify import PrintifyClient, PrintifyError
 from buzzer.publish.ship import execute_plan, plan_ship
 from buzzer.publish.state import PublishState, product_key
 
-from .conftest import FINALS_GAME
+from .conftest import FINALS_GAME, requires_cairo
 from .fake_printify import FakePrintifyTransport
 
 CONFIG = PublishConfig(
@@ -86,6 +86,7 @@ def test_client_retries_on_429(monkeypatch: pytest.MonkeyPatch) -> None:
 # --- ship: dry run -----------------------------------------------------------
 
 
+@requires_cairo
 def test_plan_ship_makes_no_api_calls(source: CachedSource, tmp_path: Path) -> None:
     state = PublishState.load(tmp_path / "state.json")
     plan = plan_ship(
@@ -126,6 +127,7 @@ def _plan(source: CachedSource, tmp_path: Path, state: PublishState) -> object:
     )
 
 
+@requires_cairo
 def test_execute_creates_drafts_and_is_idempotent(source: CachedSource, tmp_path: Path) -> None:
     state = PublishState.load(tmp_path / "state.json")
     transport = FakePrintifyTransport()
@@ -174,6 +176,7 @@ def test_execute_creates_drafts_and_is_idempotent(source: CachedSource, tmp_path
     assert len(transport.uploads) == 2  # no re-uploads
 
 
+@requires_cairo
 def test_execute_respects_confirmation_refusal(source: CachedSource, tmp_path: Path) -> None:
     state = PublishState.load(tmp_path / "state.json")
     transport = FakePrintifyTransport()
@@ -190,6 +193,7 @@ def test_execute_respects_confirmation_refusal(source: CachedSource, tmp_path: P
     assert transport.calls == []  # nothing was sent at all
 
 
+@requires_cairo
 def test_publish_needs_second_confirmation(source: CachedSource, tmp_path: Path) -> None:
     state = PublishState.load(tmp_path / "state.json")
     transport = FakePrintifyTransport()
@@ -233,6 +237,7 @@ def test_publish_needs_second_confirmation(source: CachedSource, tmp_path: Path)
     assert record is not None and record["published"] is True
 
 
+@requires_cairo
 def test_execute_refuses_placeholder_config(source: CachedSource, tmp_path: Path) -> None:
     state = PublishState.load(tmp_path / "state.json")
     placeholder = load_config(Path("config/buzzer.toml"))

@@ -9,6 +9,7 @@ from buzzer.notify import GitHubIssueNotifier, build_notifier
 from buzzer.publish.printify import PrintifyError
 from buzzer.publish.state import PublishState
 
+from .conftest import requires_cairo
 from .fake_printify import FakePrintifyTransport, FakeResponse
 from .test_publish import CONFIG, make_client
 
@@ -25,6 +26,7 @@ class FakeNotifier:
         self.messages.append((subject, body))
 
 
+@requires_cairo
 def test_daily_drafts_and_notifies(source: CachedSource, tmp_path: Path) -> None:
     state = PublishState.load(tmp_path / "state.json")
     transport = FakePrintifyTransport()
@@ -53,6 +55,7 @@ def test_daily_drafts_and_notifies(source: CachedSource, tmp_path: Path) -> None
     assert "NOT published" in body
 
 
+@requires_cairo
 def test_daily_render_only_without_credentials(source: CachedSource, tmp_path: Path) -> None:
     notifier = FakeNotifier()
     result = run_daily(
@@ -103,6 +106,7 @@ def test_daily_off_season(source: CachedSource, tmp_path: Path) -> None:
     assert not result.notified
 
 
+@requires_cairo
 def test_daily_is_idempotent(source: CachedSource, tmp_path: Path) -> None:
     state = PublishState.load(tmp_path / "state.json")
     transport = FakePrintifyTransport()
@@ -178,6 +182,7 @@ def test_build_notifier_uses_github_when_configured(
 # --- approve command ---------------------------------------------------------
 
 
+@requires_cairo
 def test_approve_publishes_drafts(
     source: CachedSource, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -90,6 +90,12 @@ is Cairo, which Windows does not ship. Two options:
 PowerShell equivalents where the docs show bash: `Copy-Item` for `cp`,
 `Invoke-Item renders` to open a folder. `uv run buzzer ...` is identical.
 
+Without Cairo, `uv run pytest` reports the rendering tests as **skipped**
+(not failed) — e.g. `67 passed, 13 skipped`. That is expected and means
+everything except PNG rasterization is verified. Once Cairo is installed
+all 80 run. To deliberately skip them anywhere, set
+`$env:BUZZER_SKIP_CAIRO_TESTS = "1"`.
+
 ### Secrets and config
 
 ```bash
