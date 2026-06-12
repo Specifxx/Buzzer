@@ -27,7 +27,9 @@ class PrintifyError(Exception):
 
 class ResponseLike(Protocol):
     status_code: int
-    text: str
+
+    @property
+    def text(self) -> str: ...
 
     def json(self) -> Any: ...
 
