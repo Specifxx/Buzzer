@@ -48,6 +48,10 @@ class DataSource(Protocol):
         """All games of a season (one entry per game, not per team)."""
         ...
 
+    def games_for_date(self, date_iso: str) -> list[GameInfo]:
+        """FINISHED games on one date (YYYY-MM-DD), for morning scans."""
+        ...
+
 
 def _safe_name(value: str) -> str:
     return re.sub(r"[^A-Za-z0-9_-]", "_", value)
@@ -115,4 +119,8 @@ class CachedSource:
     def season_games(self, season: str, playoffs: bool) -> list[GameInfo]:
         kind = "playoffs" if playoffs else "regular"
         raw: list[Row] = self._get(f"games_{season}_{kind}", "season_games", season, playoffs)
+        return [GameInfo(**row) for row in raw]
+
+    def games_for_date(self, date_iso: str) -> list[GameInfo]:
+        raw: list[Row] = self._get(f"games_date_{date_iso}", "games_for_date", date_iso)
         return [GameInfo(**row) for row in raw]

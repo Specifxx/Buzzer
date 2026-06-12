@@ -1,6 +1,12 @@
 """Buzzer command-line interface.
 
-Phase 1: ``buzzer scan`` — rank poster-worthy moments for a season or game.
+scan       rank poster-worthy moments for a season or game
+render     one moment -> SVG + 300-DPI print PNG + web preview
+catalogue  bulk back-catalogue with manifest.json
+ship       detect -> render -> validate -> publish (dry-run by default)
+daily      morning scan -> draft products + approval notification
+approve    the human yes: publish a drafted moment to the store
+printify   live catalogue helpers (shops / blueprints / variants)
 """
 
 from __future__ import annotations
@@ -368,6 +374,123 @@ def ship(
         f"{len(report.published)} published "
         f"({'drafts only' if not publish else 'live on store'})"
     )
+
+
+@main.command()
+@click.option(
+    "--date", "date_iso", default=None, help="Date to scan (YYYY-MM-DD). [default: yesterday]"
+)
+@click.option(
+    "--min-score",
+    default=70,
+    show_default=True,
+    help="Draft a product only for moments at or above this score.",
+)
+@click.option("--top-per-game", default=1, show_default=True)
+@click.option(
+    "--notify",
+    "notify_channel",
+    default="github",
+    show_default=True,
+    type=click.Choice(["github", "log"]),
+)
+@click.option("--no-drafts", is_flag=True, help="Render and notify only; never touch Printify.")
+@click.option(
+    "--out-dir", type=click.Path(path_type=Path), default=Path("renders"), show_default=True
+)
+@click.option("--state-file", type=click.Path(path_type=Path), default=None)
+@click.option("--config", "config_path", type=click.Path(path_type=Path), default=None)
+@click.option(
+    "--cache-dir", type=click.Path(path_type=Path), default=DEFAULT_CACHE_DIR, show_default=True
+)
+@click.option("--offline", is_flag=True, help="Never hit stats.nba.com; use cache only.")
+def daily(
+    date_iso: str | None,
+    min_score: int,
+    top_per_game: int,
+    notify_channel: str,
+    no_drafts: bool,
+    out_dir: Path,
+    state_file: Path | None,
+    config_path: Path | None,
+    cache_dir: Path,
+    offline: bool,
+) -> None:
+    """Morning scan: render last night's best moments, open DRAFT products,
+    and notify for approval. Never publishes anything by itself."""
+    from buzzer.daily import build_daily_client, run_daily, yesterday
+    from buzzer.notify import build_notifier
+    from buzzer.publish import PublishState, load_config
+    from buzzer.publish.config import DEFAULT_CONFIG_PATH
+    from buzzer.publish.state import DEFAULT_STATE_PATH
+
+    result = run_daily(
+        date_iso or yesterday(),
+        source=build_source(cache_dir=cache_dir, offline=offline),
+        config=load_config(config_path or DEFAULT_CONFIG_PATH),
+        state=PublishState.load(state_file or DEFAULT_STATE_PATH),
+        out_dir=out_dir,
+        notifier=build_notifier(notify_channel),
+        client=None if no_drafts else build_daily_client(),
+        min_score=min_score,
+        top_per_game=top_per_game,
+    )
+    click.echo(
+        f"{result.date_iso}: {result.games_scanned} game(s) scanned, "
+        f"{len(result.moments)} moment(s) >= {min_score}, "
+        f"{len(result.drafted_keys)} draft(s) created, "
+        f"notified={'yes' if result.notified else 'no'}"
+    )
+    if result.drafts_skipped_reason:
+        click.echo(f"drafts skipped: {result.drafts_skipped_reason}", err=True)
+
+
+@main.command()
+@click.option("--moment", "moment_id", required=True, help="Moment id, e.g. 0042500401:350.")
+@click.option(
+    "--style",
+    default="all",
+    show_default=True,
+    type=click.Choice(["trajectory", "blueprint", "type", "all"]),
+)
+@click.option("--yes", is_flag=True, help="Skip the confirmation prompt.")
+@click.option("--state-file", type=click.Path(path_type=Path), default=None)
+def approve(moment_id: str, style: str, yes: bool, state_file: Path | None) -> None:
+    """Publish a drafted moment to the live store (the human-approval step)."""
+    from buzzer.publish import PrintifyClient, PublishState
+    from buzzer.publish.config import load_secrets
+    from buzzer.publish.state import DEFAULT_STATE_PATH, product_key
+    from buzzer.render import STYLES
+
+    state = PublishState.load(state_file or DEFAULT_STATE_PATH)
+    styles = STYLES if style == "all" else (style,)
+    drafts: list[tuple[str, str, str]] = []  # (key, product_id, title)
+    for one_style in styles:
+        key = product_key(moment_id, one_style)
+        record = state.product(key)
+        if record is None:
+            click.echo(f"no draft recorded for {key} — run the daily scan or ship first", err=True)
+            continue
+        if record.get("published"):
+            click.echo(f"already published: {key}")
+            continue
+        drafts.append((key, record["product_id"], record["title"]))
+
+    if not drafts:
+        sys.exit(1)
+    click.echo("about to publish LIVE:")
+    for _key, product_id, title in drafts:
+        click.echo(f"  {product_id}  {title}")
+    if not (yes or click.confirm("publish these to the connected store?")):
+        click.echo("aborted — drafts remain unpublished.")
+        sys.exit(2)
+
+    token, shop_id = load_secrets()
+    client = PrintifyClient(token=token, shop_id=shop_id)
+    for key, product_id, _title in drafts:
+        client.publish_product(product_id)
+        state.mark_published(key)
+        click.echo(f"published {key} ({product_id})")
 
 
 @main.group()

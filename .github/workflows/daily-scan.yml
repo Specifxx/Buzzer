@@ -1,0 +1,71 @@
+# Morning scan: detect last night's iconic moments, render posters,
+# open DRAFT Printify products, and file a GitHub issue for approval.
+#
+# Human-in-the-loop guarantee: this job can NEVER publish to the store.
+# Publishing happens only when the operator runs
+#   uv run buzzer approve --moment <id>
+#
+# Required repository secrets (Settings -> Secrets -> Actions):
+#   PRINTIFY_API_TOKEN, PRINTIFY_SHOP_ID
+# (Without them the job still renders and notifies — render-only mode.)
+#
+# Known caveat: stats.nba.com sometimes blocks datacenter IPs (including
+# GitHub runners). If the scan step fails with timeouts, options are a
+# self-hosted runner at home, or a residential proxy. The job is safe to
+# re-run any time: all API responses are cached and product sync is
+# idempotent.
+
+name: daily-scan
+
+on:
+  schedule:
+    - cron: "30 13 * * *" # 13:30 UTC, after US west-coast games finish
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Date to scan (YYYY-MM-DD, default: yesterday)"
+        required: false
+
+permissions:
+  contents: read
+  issues: write # the approval notification is a GitHub issue
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Cache nba_api responses
+        uses: actions/cache@v4
+        with:
+          path: .buzzer_cache
+          key: buzzer-cache-${{ github.run_id }}
+          restore-keys: buzzer-cache-
+
+      - name: Run the morning scan
+        env:
+          PRINTIFY_API_TOKEN: ${{ secrets.PRINTIFY_API_TOKEN }}
+          PRINTIFY_SHOP_ID: ${{ secrets.PRINTIFY_SHOP_ID }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BUZZER_NOTIFY_REPO: ${{ github.repository }}
+        run: |
+          uv run buzzer daily \
+            ${{ inputs.date && format('--date {0}', inputs.date) || '' }} \
+            --notify github
+
+      - name: Upload renders for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: renders-${{ github.run_id }}
+          path: renders/
+          if-no-files-found: ignore
+          retention-days: 14

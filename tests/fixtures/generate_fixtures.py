@@ -439,6 +439,9 @@ def main() -> None:
     _write("shots_0022500123.json", quiet.shots)
     _write("summary_0022500123.json", quiet_summary)
     _write("games_2025-26_playoffs.json", [finals_summary])
+    _write("games_date_2026-06-04.json", [finals_summary])
+    _write("games_date_2025-11-05.json", [quiet_summary])
+    _write("games_date_2026-07-01.json", [])  # off-season: no games
 
 
 if __name__ == "__main__":

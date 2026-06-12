@@ -118,6 +118,40 @@ class NbaApiSource:
             away_city=city_for_tricode(away),
         )
 
+    def games_for_date(self, date_iso: str) -> list[GameInfo]:
+        """Finished games on one date, from the scoreboard endpoint."""
+        from nba_api.stats.endpoints import scoreboardv2
+        from nba_api.stats.static import teams as static_teams
+
+        payload = self._call(scoreboardv2.ScoreboardV2, game_date=date_iso)
+        rows = rows_from_result_sets(payload, "GameHeader")
+
+        def tricode(team_id: int) -> str:
+            team = static_teams.find_team_name_by_id(team_id)
+            return str(team["abbreviation"]) if team else "UNK"
+
+        games: list[GameInfo] = []
+        for row in rows:
+            if int(row.get("GAME_STATUS_ID", 0)) != 3:  # 3 == final
+                logger.info("skipping unfinished game %s", row.get("GAME_ID"))
+                continue
+            home = tricode(int(row["HOME_TEAM_ID"]))
+            away = tricode(int(row["VISITOR_TEAM_ID"]))
+            season_start = int(row["SEASON"])
+            games.append(
+                GameInfo(
+                    game_id=str(row["GAME_ID"]),
+                    game_date=date_iso,
+                    season=f"{season_start}-{(season_start + 1) % 100:02d}",
+                    is_playoff=str(row["GAME_ID"]).startswith(PLAYOFF_PREFIX),
+                    home_tricode=home,
+                    away_tricode=away,
+                    home_city=city_for_tricode(home),
+                    away_city=city_for_tricode(away),
+                )
+            )
+        return games
+
     def season_games(self, season: str, playoffs: bool) -> list[GameInfo]:
         from nba_api.stats.endpoints import leaguegamelog
 
