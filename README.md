@@ -72,6 +72,24 @@ uv run pytest                 # 80 offline tests, ~5s — should be green
 Rendering needs system Cairo (`libcairo2`), present on most Linux/macOS
 (`apt install libcairo2` / `brew install cairo`).
 
+### Windows (PowerShell)
+
+`uv` and all `buzzer` commands work as-is in PowerShell. The only catch
+is Cairo, which Windows does not ship. Two options:
+
+* **WSL (recommended)** — `wsl --install`, open Ubuntu, follow the
+  Linux steps above. Everything (fonts included) matches production.
+* **Native** — install the GTK3 runtime, which bundles the Cairo DLLs:
+  <https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases>
+  (tick "Set up PATH"), then open a NEW PowerShell window. Note that
+  native Windows renders fall back to Arial instead of DejaVu Sans, so
+  posters look slightly different from CI/Linux output — fine for
+  development, but generate the files you actually ship from one
+  consistent environment.
+
+PowerShell equivalents where the docs show bash: `Copy-Item` for `cp`,
+`Invoke-Item renders` to open a folder. `uv run buzzer ...` is identical.
+
 ### Secrets and config
 
 ```bash
