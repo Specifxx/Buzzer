@@ -12,6 +12,16 @@ from functools import cache
 
 logger = logging.getLogger(__name__)
 
+# nba_api's "city" field is sometimes a marketing region, not a city.
+# "Golden State" is half a trade name; "Utah"/"Indiana"/"Minnesota" are
+# states. Posters may only carry true geographic city names.
+CITY_OVERRIDES = {
+    "GSW": "San Francisco",
+    "UTA": "Salt Lake City",
+    "IND": "Indianapolis",
+    "MIN": "Minneapolis",
+}
+
 
 @cache
 def city_for_tricode(tricode: str) -> str | None:
@@ -19,6 +29,8 @@ def city_for_tricode(tricode: str) -> str | None:
 
     Returns ``None`` for unknown/historic tricodes rather than guessing.
     """
+    if tricode in CITY_OVERRIDES:
+        return CITY_OVERRIDES[tricode]
     try:
         from nba_api.stats.static import teams as static_teams
     except ImportError:  # pragma: no cover - nba_api is a hard dependency

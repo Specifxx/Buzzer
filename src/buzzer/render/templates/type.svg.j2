@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="{{ w|px }}" height="{{ h|px }}" viewBox="0 0 {{ w|px }} {{ h|px }}">
+  <rect x="0" y="0" width="{{ w|px }}" height="{{ h|px }}" fill="{{ bg }}"/>
+
+  <text x="{{ margin|px }}" y="{{ head_y|px }}" font-family="{{ sans }}" font-weight="bold"
+        font-size="{{ head_fs|px }}" fill="{{ ink }}"
+        letter-spacing="{{ (head_fs*0.18)|px }}">{{ text.stakes_line }}</text>
+  <text x="{{ (w - margin)|px }}" y="{{ head_y|px }}" font-family="{{ sans }}"
+        font-size="{{ head_fs|px }}" fill="{{ accent }}" text-anchor="end"
+        letter-spacing="{{ (head_fs*0.14)|px }}">{{ text.period_line }}</text>
+
+  {% for row in rows %}
+  <line x1="{{ margin|px }}" y1="{{ row.rule_y|px }}" x2="{{ (w - margin)|px }}" y2="{{ row.rule_y|px }}"
+        stroke="{{ ink }}" stroke-width="{{ (hairline*1.2)|px }}"/>
+  <text x="{{ margin|px }}" y="{{ row.value_y|px }}" font-family="{{ sans }}" font-weight="bold"
+        font-size="{{ row.fs|px }}" fill="{{ ink }}"
+        letter-spacing="{{ (row.fs*-0.02)|px }}">{{ row.value }}</text>
+  <text x="{{ (w - margin)|px }}" y="{{ row.caption_y|px }}" font-family="{{ mono }}"
+        font-size="{{ caption_fs|px }}" fill="{{ accent }}" text-anchor="end"
+        letter-spacing="{{ (caption_fs*0.22)|px }}">{{ row.caption }}</text>
+  {% endfor %}
+  <line x1="{{ margin|px }}" y1="{{ zone_bottom|px }}" x2="{{ (w - margin)|px }}" y2="{{ zone_bottom|px }}"
+        stroke="{{ ink }}" stroke-width="{{ (hairline*1.2)|px }}"/>
+
+  <text x="{{ margin|px }}" y="{{ score_y|px }}" font-family="{{ sans }}" font-weight="bold"
+        font-size="{{ score_fs|px }}" fill="{{ ink }}"
+        letter-spacing="{{ (score_fs*0.04)|px }}">{{ text.score_line }}</text>
+  <text x="{{ margin|px }}" y="{{ footer_y|px }}" font-family="{{ mono }}"
+        font-size="{{ footer_fs|px }}" fill="{{ ink }}" opacity="0.8"
+        letter-spacing="{{ (footer_fs*0.2)|px }}">{{ text.date_line }}</text>
+</svg>

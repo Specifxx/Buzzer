@@ -130,6 +130,18 @@ def detect_moments(
     return moments
 
 
+def find_moment(moment_id: str, source: DataSource | None = None) -> Moment:
+    """Look up one moment by its ``<game_id>:<event_num>`` id."""
+    game_id, _, event_str = moment_id.partition(":")
+    if not event_str:
+        raise ValueError(f"moment id must look like '0042500401:350', got {moment_id!r}")
+    event_num = int(event_str)
+    for moment in detect_moments(game_id, source=source, min_score=0):
+        if moment.event_num == event_num:
+            return moment
+    raise LookupError(f"event {event_num} of game {game_id} is not a made field goal")
+
+
 def scan_season(
     season: str,
     playoffs: bool,

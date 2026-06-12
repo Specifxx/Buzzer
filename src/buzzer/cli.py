@@ -12,7 +12,13 @@ from pathlib import Path
 
 import click
 
-from buzzer.detect import DEFAULT_CACHE_DIR, DEFAULT_MIN_SCORE, build_source, detect_moments
+from buzzer.detect import (
+    DEFAULT_CACHE_DIR,
+    DEFAULT_MIN_SCORE,
+    build_source,
+    detect_moments,
+    find_moment,
+)
 from buzzer.detect import scan_season as run_scan_season
 from buzzer.logsetup import configure_logging
 from buzzer.models import Moment
@@ -115,6 +121,61 @@ def scan(
     else:
         click.echo("No moments at or above the score threshold.", err=True)
         sys.exit(1)
+
+
+@main.command()
+@click.option("--moment", "moment_id", required=True, help="Moment id, e.g. 0042500401:350.")
+@click.option(
+    "--style",
+    default="all",
+    show_default=True,
+    type=click.Choice(["trajectory", "blueprint", "type", "all"]),
+)
+@click.option(
+    "--size",
+    default="18x24",
+    show_default=True,
+    type=click.Choice(["12x16", "18x24", "24x36", "all"]),
+)
+@click.option(
+    "--out-dir",
+    type=click.Path(path_type=Path),
+    default=Path("renders"),
+    show_default=True,
+)
+@click.option("--no-print-files", is_flag=True, help="Skip the 300-DPI print PNGs (faster).")
+@click.option(
+    "--cache-dir",
+    type=click.Path(path_type=Path),
+    default=DEFAULT_CACHE_DIR,
+    show_default=True,
+)
+@click.option("--offline", is_flag=True, help="Never hit the network; use cache only.")
+def render(
+    moment_id: str,
+    style: str,
+    size: str,
+    out_dir: Path,
+    no_print_files: bool,
+    cache_dir: Path,
+    offline: bool,
+) -> None:
+    """Render a moment as poster SVG + print-ready PNG + web preview."""
+    from buzzer.render import SIZES, STYLES, render_moment
+
+    source = build_source(cache_dir=cache_dir, offline=offline)
+    moment = find_moment(moment_id, source=source)
+    styles = list(STYLES) if style == "all" else [style]
+    sizes = sorted(SIZES) if size == "all" else [size]
+
+    outputs: list[Path] = []
+    for one_style in styles:
+        for one_size in sizes:
+            outputs.extend(
+                render_moment(moment, one_style, one_size, out_dir, print_file=not no_print_files)
+            )
+    for path in outputs:
+        click.echo(str(path))
 
 
 if __name__ == "__main__":
