@@ -44,7 +44,7 @@
         .map((b) => `<span class="badge">${b}</span>`)
         .join("");
       card.innerHTML = `
-        <img loading="lazy" src="${entry.files[galleryStyle]["18x24"]}" alt="${entry.title}" />
+        <div class="card-art">${R.renderPoster(entry.facts, galleryStyle, "18x24")}</div>
         <div class="card-body">
           <div class="card-title">${entry.title}</div>
           <div class="card-meta">
@@ -83,7 +83,9 @@
 
   function refreshModal() {
     const file = modalEntry.files[modalStyle][modalSize];
-    $("#modal-img").src = file;
+    $("#modal-poster-holder").innerHTML = R.renderPoster(
+      modalEntry.facts, modalStyle, modalSize
+    );
     $("#modal-download").href = file;
     $("#modal-download").download = file.split("/").pop();
     $$("#modal-styles .chip").forEach((c) =>
@@ -288,6 +290,32 @@
   bind("#c-playoffs", (el) => (state.playoffs = el.checked));
 
   /* downloads */
+  let fontCSSPromise = null;
+  function fontCSS() {
+    if (!fontCSSPromise) {
+      const faces = [
+        ["Anton", 400, "fonts/anton-latin-400-normal.woff2"],
+        ["Space Grotesk", 500, "fonts/space-grotesk-latin-500-normal.woff2"],
+        ["Space Grotesk", 700, "fonts/space-grotesk-latin-700-normal.woff2"],
+        ["Space Mono", 400, "fonts/space-mono-latin-400-normal.woff2"],
+        ["Space Mono", 700, "fonts/space-mono-latin-700-normal.woff2"],
+      ];
+      fontCSSPromise = Promise.all(
+        faces.map(async ([family, weight, url]) => {
+          const buf = await (await fetch(url)).arrayBuffer();
+          let bin = "";
+          for (const b of new Uint8Array(buf)) bin += String.fromCharCode(b);
+          return `@font-face{font-family:'${family}';font-weight:${weight};` +
+            `src:url(data:font/woff2;base64,${btoa(bin)}) format('woff2');}`;
+        })
+      ).then((rules) => rules.join(""), () => "");
+    }
+    return fontCSSPromise;
+  }
+  async function withEmbeddedFonts(svg) {
+    const css = await fontCSS();
+    return css ? svg.replace(/(<svg[^>]*>)/, `$1<style>${css}</style>`) : svg;
+  }
   function downloadBlob(blob, name) {
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -295,10 +323,12 @@
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 5000);
   }
-  $("#dl-svg").addEventListener("click", () => {
-    downloadBlob(new Blob([lastSVG], { type: "image/svg+xml" }), `buzzer-${state.style}-${state.size}.svg`);
+  $("#dl-svg").addEventListener("click", async () => {
+    const svg = await withEmbeddedFonts(lastSVG);
+    downloadBlob(new Blob([svg], { type: "image/svg+xml" }), `buzzer-${state.style}-${state.size}.svg`);
   });
-  $("#dl-png").addEventListener("click", () => {
+  $("#dl-png").addEventListener("click", async () => {
+    const svg = await withEmbeddedFonts(lastSVG);
     const img = new Image();
     const [iw, ih] = R.SIZES[state.size];
     img.onload = () => {
@@ -309,7 +339,7 @@
       canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
       canvas.toBlob((blob) => downloadBlob(blob, `buzzer-${state.style}-${state.size}.png`), "image/png");
     };
-    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(lastSVG);
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
   });
 
   /* boot */

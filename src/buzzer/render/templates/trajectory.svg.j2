@@ -1,56 +1,67 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="{{ w|px }}" height="{{ h|px }}" viewBox="0 0 {{ w|px }} {{ h|px }}">
   <defs>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="{{ accent }}" stop-opacity="0.42"/>
+      <stop offset="62%" stop-color="{{ accent }}" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="{{ accent }}" stop-opacity="0"/>
+    </radialGradient>
     <clipPath id="court-zone">
-      <rect x="0" y="{{ clip_top|px }}" width="{{ w|px }}" height="{{ clip_h|px }}"/>
+      <rect x="0" y="{{ court_top|px }}" width="{{ w|px }}" height="{{ (court_bottom - court_top)|px }}"/>
     </clipPath>
   </defs>
-  <rect x="0" y="0" width="{{ w|px }}" height="{{ h|px }}" fill="{{ bg }}"/>
+  <rect x="0" y="0" width="{{ w|px }}" height="{{ h|px }}" fill="{{ ink }}"/>
 
   <g clip-path="url(#court-zone)">
-    {% for r in rings %}
-    <circle cx="{{ hoop_x|px }}" cy="{{ hoop_y|px }}" r="{{ r|px }}" fill="none"
-            stroke="{{ faint }}" stroke-width="{{ hairline|px }}"
-            stroke-dasharray="{{ (hairline*3)|px }} {{ (hairline*7)|px }}"/>
+    <circle cx="{{ hoop_x|px }}" cy="{{ hoop_y|px }}" r="{{ glow_r|px }}" fill="url(#glow)"/>
+    {% for ring in rings %}
+    <circle cx="{{ hoop_x|px }}" cy="{{ hoop_y|px }}" r="{{ ring.r|px }}" fill="none"
+            stroke="{{ accent2 if ring.tone == 'accent2' else paper }}"
+            stroke-width="{{ hairline|px }}"
+            opacity="{{ '0.30' if ring.tone == 'accent2' else '0.12' }}"/>
     {% endfor %}
     {% if shot_ring %}
     <circle cx="{{ hoop_x|px }}" cy="{{ hoop_y|px }}" r="{{ shot_ring|px }}" fill="none"
-            stroke="{{ accent }}" stroke-width="{{ hairline|px }}" opacity="0.45"
-            stroke-dasharray="{{ (hairline*5)|px }} {{ (hairline*5)|px }}"/>
+            stroke="{{ accent }}" stroke-width="{{ (hairline*1.8)|px }}" opacity="0.85"/>
     {% endif %}
-    <path d="{{ three_d }}" fill="none" stroke="{{ faint }}" stroke-width="{{ hairline|px }}"/>
+    <path d="{{ three_d }}" fill="none" stroke="{{ paper }}" stroke-width="{{ hairline|px }}" opacity="0.12"/>
     <line x1="{{ baseline[0]|px }}" y1="{{ baseline[1]|px }}" x2="{{ baseline[2]|px }}" y2="{{ baseline[3]|px }}"
-          stroke="{{ ink }}" stroke-width="{{ hairline|px }}" opacity="0.6"/>
-    <line x1="{{ backboard[0]|px }}" y1="{{ backboard[1]|px }}" x2="{{ backboard[2]|px }}" y2="{{ backboard[3]|px }}"
-          stroke="{{ ink }}" stroke-width="{{ (hairline*2)|px }}"/>
-    <circle cx="{{ hoop_x|px }}" cy="{{ hoop_y|px }}" r="{{ hoop_r|px }}" fill="none"
-            stroke="{{ ink }}" stroke-width="{{ (hairline*1.6)|px }}"/>
+          stroke="{{ paper }}" stroke-width="{{ hairline|px }}" opacity="0.30"/>
 
-    <path d="{{ arc_d }}" fill="none" stroke="{{ accent }}" stroke-width="{{ (hairline*2.4)|px }}"
-          stroke-dasharray="{{ (hairline*7)|px }} {{ (hairline*5)|px }}" stroke-linecap="round"/>
-    <circle cx="{{ shot_x|px }}" cy="{{ shot_y|px }}" r="{{ halo_r|px }}" fill="none"
-            stroke="{{ accent }}" stroke-width="{{ hairline|px }}" opacity="0.6"/>
-    <circle cx="{{ shot_x|px }}" cy="{{ shot_y|px }}" r="{{ dot_r|px }}" fill="{{ accent }}"/>
+    {% for echo in arc_echoes %}
+    <path d="{{ echo.d }}" fill="none"
+          stroke="{{ accent if echo.tone == 'accent' else (accent2 if echo.tone == 'accent2' else paper) }}"
+          stroke-width="{{ echo.width|px }}" opacity="{{ echo.alpha }}" stroke-linecap="round"/>
+    {% endfor %}
+    <path d="{{ arc_main }}" fill="none" stroke="{{ paper }}"
+          stroke-width="{{ arc_width|px }}" stroke-linecap="round"/>
+
+    <line x1="{{ backboard[0]|px }}" y1="{{ backboard[1]|px }}" x2="{{ backboard[2]|px }}" y2="{{ backboard[3]|px }}"
+          stroke="{{ paper }}" stroke-width="{{ (hairline*2.4)|px }}"/>
+    <circle cx="{{ hoop_x|px }}" cy="{{ hoop_y|px }}" r="{{ hoop_r|px }}" fill="none"
+            stroke="{{ paper }}" stroke-width="{{ (hairline*2)|px }}"/>
+    <circle cx="{{ shot_x|px }}" cy="{{ shot_y|px }}" r="{{ (dot_r*1.9)|px }}" fill="none"
+            stroke="{{ accent2 }}" stroke-width="{{ hairline|px }}" opacity="0.8"/>
+    <circle cx="{{ shot_x|px }}" cy="{{ shot_y|px }}" r="{{ dot_r|px }}" fill="{{ accent2 }}"
+            stroke="{{ ink }}" stroke-width="{{ hairline|px }}"/>
   </g>
 
-  {% if text.distance_line %}
-  <text x="{{ dist_label_x|px }}" y="{{ dist_label_y|px }}" font-family="{{ mono }}"
-        font-size="{{ footer_fs|px }}" fill="{{ accent }}" text-anchor="{{ dist_label_anchor }}"
-        letter-spacing="{{ (footer_fs*0.25)|px }}">{{ text.distance_line }}</text>
-  {% endif %}
+  <line x1="{{ margin|px }}" y1="{{ rule_y|px }}" x2="{{ (w - margin)|px }}" y2="{{ rule_y|px }}"
+        stroke="{{ accent }}" stroke-width="{{ (hairline*3)|px }}"/>
 
-  <text x="{{ margin|px }}" y="{{ clock_y|px }}" font-family="{{ sans }}" font-weight="bold"
-        font-size="{{ clock_fs|px }}" fill="{{ ink }}">{{ text.clock_line }}</text>
-  <text x="{{ (w - margin)|px }}" y="{{ head_y1|px }}" font-family="{{ sans }}" font-weight="bold"
-        font-size="{{ head_fs|px }}" fill="{{ ink }}" text-anchor="end"
-        letter-spacing="{{ (head_fs*0.2)|px }}">{{ text.period_line }}</text>
-  <text x="{{ (w - margin)|px }}" y="{{ head_y2|px }}" font-family="{{ sans }}"
-        font-size="{{ (head_fs*0.62)|px }}" fill="{{ accent }}" text-anchor="end"
-        letter-spacing="{{ (head_fs*0.16)|px }}">{{ text.stakes_line }}</text>
+  <text x="{{ margin|px }}" y="{{ clock_y|px }}" font-family="{{ display }}"
+        font-size="{{ clock_fs|px }}" fill="{{ paper }}">{{ text.clock_line }}</text>
 
-  <text x="{{ (w/2)|px }}" y="{{ score_y|px }}" font-family="{{ sans }}" font-weight="bold"
-        font-size="{{ score_fs|px }}" fill="{{ ink }}" text-anchor="middle"
-        letter-spacing="{{ (score_fs*0.08)|px }}">{{ text.score_line }}</text>
-  <text x="{{ (w/2)|px }}" y="{{ footer_y|px }}" font-family="{{ mono }}"
-        font-size="{{ footer_fs|px }}" fill="{{ ink }}" text-anchor="middle" opacity="0.75"
-        letter-spacing="{{ (footer_fs*0.2)|px }}">{{ text.date_line }}</text>
+  <text x="{{ (w - margin)|px }}" y="{{ score_y1|px }}" font-family="{{ sans }}" font-weight="700"
+        font-size="{{ score_fs|px }}" fill="{{ paper }}" text-anchor="end"
+        letter-spacing="{{ (score_fs*0.05)|px }}">{{ away_line }}</text>
+  <text x="{{ (w - margin)|px }}" y="{{ score_y2|px }}" font-family="{{ sans }}" font-weight="700"
+        font-size="{{ score_fs|px }}" fill="{{ accent2 }}" text-anchor="end"
+        letter-spacing="{{ (score_fs*0.05)|px }}">{{ home_line }}</text>
+
+  <text x="{{ margin|px }}" y="{{ footer_y|px }}" font-family="{{ mono }}"
+        font-size="{{ footer_fs|px }}" fill="{{ paper }}" opacity="0.65"
+        letter-spacing="{{ (footer_fs*0.18)|px }}">{{ text.date_line }}</text>
+  <text x="{{ (w - margin)|px }}" y="{{ footer_y|px }}" font-family="{{ mono }}"
+        font-size="{{ footer_fs|px }}" fill="{{ accent2 }}" text-anchor="end"
+        letter-spacing="{{ (footer_fs*0.18)|px }}">{{ footer_right }}</text>
 </svg>

@@ -1,27 +1,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="{{ w|px }}" height="{{ h|px }}" viewBox="0 0 {{ w|px }} {{ h|px }}">
-  <rect x="0" y="0" width="{{ w|px }}" height="{{ h|px }}" fill="{{ bg }}"/>
+  <rect x="0" y="0" width="{{ w|px }}" height="{{ h|px }}" fill="{{ paper }}"/>
 
   {% for gx in grid_xs %}
-  <line x1="{{ gx|px }}" y1="0" x2="{{ gx|px }}" y2="{{ h|px }}" stroke="{{ faint }}"
-        stroke-width="{{ (hairline*0.5)|px }}" opacity="0.45"/>
+  <line x1="{{ gx|px }}" y1="0" x2="{{ gx|px }}" y2="{{ h|px }}" stroke="{{ ink }}"
+        stroke-width="{{ (hairline*0.45)|px }}" opacity="0.10"/>
   {% endfor %}
   {% for gy in grid_ys %}
-  <line x1="0" y1="{{ gy|px }}" x2="{{ w|px }}" y2="{{ gy|px }}" stroke="{{ faint }}"
-        stroke-width="{{ (hairline*0.5)|px }}" opacity="0.45"/>
+  <line x1="0" y1="{{ gy|px }}" x2="{{ w|px }}" y2="{{ gy|px }}" stroke="{{ ink }}"
+        stroke-width="{{ (hairline*0.45)|px }}" opacity="0.10"/>
   {% endfor %}
 
-  <rect x="{{ (margin*0.5)|px }}" y="{{ (margin*0.5)|px }}" width="{{ (w - margin)|px }}"
-        height="{{ (h - margin)|px }}" fill="none" stroke="{{ ink }}"
-        stroke-width="{{ (hairline*1.4)|px }}"/>
+  {% for rx, ry in reg_pts %}
+  <line x1="{{ (rx - reg)|px }}" y1="{{ ry|px }}" x2="{{ (rx + reg)|px }}" y2="{{ ry|px }}"
+        stroke="{{ mark }}" stroke-width="{{ hairline|px }}"/>
+  <line x1="{{ rx|px }}" y1="{{ (ry - reg)|px }}" x2="{{ rx|px }}" y2="{{ (ry + reg)|px }}"
+        stroke="{{ mark }}" stroke-width="{{ hairline|px }}"/>
+  {% endfor %}
 
-  <text x="{{ margin|px }}" y="{{ head_y|px }}" font-family="{{ mono }}" font-weight="bold"
-        font-size="{{ head_fs|px }}" fill="{{ ink }}"
-        letter-spacing="{{ (head_fs*0.18)|px }}">HALF COURT — PLAN VIEW</text>
+  <text x="{{ margin|px }}" y="{{ head_y|px }}" font-family="{{ display }}"
+        font-size="{{ head_fs|px }}" fill="{{ ink }}">HALF COURT — PLAN VIEW</text>
   <text x="{{ margin|px }}" y="{{ sub_y|px }}" font-family="{{ mono }}"
-        font-size="{{ sub_fs|px }}" fill="{{ ink }}" opacity="0.8"
-        letter-spacing="{{ (sub_fs*0.2)|px }}">{{ text.stakes_line }} — {{ text.cities_line }}</text>
+        font-size="{{ sub_fs|px }}" fill="{{ mark }}"
+        letter-spacing="{{ (sub_fs*0.18)|px }}">{{ text.stakes_line }} — {{ text.cities_line }}</text>
 
-  <g fill="none" stroke="{{ ink }}" stroke-width="{{ court_stroke|px }}">
+  <g fill="none" stroke="{{ ink }}" stroke-width="{{ court_stroke|px }}"
+     stroke-linejoin="round" stroke-linecap="round">
     <path d="{{ sideline_d }}"/>
     <path d="{{ halfcircle_d }}"/>
     <path d="{{ three_d }}"/>
@@ -33,24 +36,21 @@
   </g>
 
   <line x1="{{ shot_x|px }}" y1="{{ shot_y|px }}" x2="{{ hoop_x|px }}" y2="{{ hoop_y|px }}"
-        stroke="{{ accent }}" stroke-width="{{ (hairline*1.3)|px }}"
+        stroke="{{ mark }}" stroke-width="{{ (hairline*1.4)|px }}"
         stroke-dasharray="{{ (hairline*6)|px }} {{ (hairline*4)|px }}"/>
-  <circle cx="{{ hoop_x|px }}" cy="{{ hoop_y|px }}" r="{{ (hairline*2.5)|px }}" fill="{{ accent }}"/>
-  <circle cx="{{ shot_x|px }}" cy="{{ shot_y|px }}" r="{{ (hairline*2.5)|px }}" fill="{{ accent }}"/>
-
+  <circle cx="{{ hoop_x|px }}" cy="{{ hoop_y|px }}" r="{{ (hairline*2.6)|px }}" fill="{{ mark }}"/>
+  <circle cx="{{ shot_x|px }}" cy="{{ shot_y|px }}" r="{{ (hairline*2.6)|px }}" fill="{{ mark }}"/>
   <line x1="{{ (shot_x - cross)|px }}" y1="{{ shot_y|px }}" x2="{{ (shot_x + cross)|px }}" y2="{{ shot_y|px }}"
-        stroke="{{ accent }}" stroke-width="{{ hairline|px }}"/>
+        stroke="{{ mark }}" stroke-width="{{ hairline|px }}"/>
   <line x1="{{ shot_x|px }}" y1="{{ (shot_y - cross)|px }}" x2="{{ shot_x|px }}" y2="{{ (shot_y + cross)|px }}"
-        stroke="{{ accent }}" stroke-width="{{ hairline|px }}"/>
+        stroke="{{ mark }}" stroke-width="{{ hairline|px }}"/>
   <circle cx="{{ shot_x|px }}" cy="{{ shot_y|px }}" r="{{ (cross*0.62)|px }}" fill="none"
-          stroke="{{ accent }}" stroke-width="{{ hairline|px }}"/>
+          stroke="{{ mark }}" stroke-width="{{ hairline|px }}"/>
 
   <text x="{{ coord_x|px }}" y="{{ coord_y|px }}" font-family="{{ mono }}" font-size="{{ mono_fs|px }}"
-        fill="{{ accent }}" text-anchor="middle"
-        letter-spacing="{{ (mono_fs*0.08)|px }}">{{ coord_label }}</text>
-  <text x="{{ dim_label_x|px }}" y="{{ dim_label_y|px }}" font-family="{{ mono }}" font-weight="bold"
-        font-size="{{ (mono_fs*1.3)|px }}" fill="{{ accent }}"
-        letter-spacing="{{ (mono_fs*0.12)|px }}">{{ dim_label }}</text>
+        fill="{{ mark }}" text-anchor="middle">{{ coord_label }}</text>
+  <text x="{{ dim_label_x|px }}" y="{{ dim_label_y|px }}" font-family="{{ mono }}" font-weight="700"
+        font-size="{{ (mono_fs*1.35)|px }}" fill="{{ mark }}">{{ dim_label }}</text>
 
   <line x1="{{ court_left_x|px }}" y1="{{ court_w_label_y|px }}" x2="{{ court_right_x|px }}" y2="{{ court_w_label_y|px }}"
         stroke="{{ ink }}" stroke-width="{{ (hairline*0.8)|px }}"/>
@@ -62,20 +62,20 @@
         font-size="{{ mono_fs|px }}" fill="{{ ink }}" text-anchor="middle">50 FT</text>
 
   <g>
-    <rect x="{{ margin|px }}" y="{{ title_top|px }}" width="{{ (w - margin*2)|px }}" height="{{ title_h|px }}"
-          fill="none" stroke="{{ ink }}" stroke-width="{{ (hairline*1.4)|px }}"/>
-    {% for label, value in rows %}
-    {% set row_y = title_top + loop.index0 * row_h %}
-    {% if not loop.first %}
-    <line x1="{{ margin|px }}" y1="{{ row_y|px }}" x2="{{ (w - margin)|px }}" y2="{{ row_y|px }}"
-          stroke="{{ ink }}" stroke-width="{{ (hairline*0.7)|px }}"/>
-    {% endif %}
-    <text x="{{ (margin + label_fs)|px }}" y="{{ (row_y + row_h*0.62)|px }}" font-family="{{ mono }}"
-          font-size="{{ label_fs|px }}" fill="{{ ink }}" opacity="0.7"
-          letter-spacing="{{ (label_fs*0.2)|px }}">{{ label }}</text>
-    <text x="{{ (margin + (w - margin*2)*0.22)|px }}" y="{{ (row_y + row_h*0.64)|px }}" font-family="{{ mono }}"
-          font-weight="bold" font-size="{{ value_fs|px }}" fill="{{ ink }}"
-          letter-spacing="{{ (value_fs*0.06)|px }}">{{ value }}</text>
+    <rect x="{{ margin|px }}" y="{{ block_top|px }}" width="{{ (w - margin*2)|px }}" height="{{ block_h|px }}"
+          fill="none" stroke="{{ ink }}" stroke-width="{{ (hairline*1.6)|px }}"/>
+    <line x1="{{ margin|px }}" y1="{{ (block_top + cell_h)|px }}" x2="{{ (w - margin)|px }}" y2="{{ (block_top + cell_h)|px }}"
+          stroke="{{ ink }}" stroke-width="{{ (hairline*0.8)|px }}"/>
+    <line x1="{{ (margin + cell_w)|px }}" y1="{{ block_top|px }}" x2="{{ (margin + cell_w)|px }}" y2="{{ (block_top + block_h)|px }}"
+          stroke="{{ ink }}" stroke-width="{{ (hairline*0.8)|px }}"/>
+    <line x1="{{ (margin + cell_w*2)|px }}" y1="{{ block_top|px }}" x2="{{ (margin + cell_w*2)|px }}" y2="{{ (block_top + block_h)|px }}"
+          stroke="{{ ink }}" stroke-width="{{ (hairline*0.8)|px }}"/>
+    {% for cell in cells %}
+    <text x="{{ (cell.x + label_fs)|px }}" y="{{ (cell.y + cell_h*0.34)|px }}" font-family="{{ mono }}"
+          font-size="{{ label_fs|px }}" fill="{{ ink }}" opacity="0.55"
+          letter-spacing="{{ (label_fs*0.2)|px }}">{{ cell.label }}</text>
+    <text x="{{ (cell.x + label_fs)|px }}" y="{{ (cell.y + cell_h*0.72)|px }}" font-family="{{ sans }}"
+          font-weight="700" font-size="{{ value_fs|px }}" fill="{{ ink }}">{{ cell.value }}</text>
     {% endfor %}
   </g>
 </svg>

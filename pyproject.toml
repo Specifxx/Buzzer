@@ -22,6 +22,8 @@ dev = [
     "mypy>=1.10",
     "ruff>=0.5",
     "types-requests>=2.33.0.20260518",
+    "fonttools>=4.63.0",
+    "brotli>=1.2.0",
 ]
 
 [build-system]

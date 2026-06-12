@@ -1,11 +1,9 @@
 /* Buzzer Studio — client-side poster renderer.
  *
- * A faithful JavaScript port of src/buzzer/render/{court,text,renderer}.py
- * and src/buzzer/scoring.py, so the Designer tab can re-render posters
- * live in the browser. The Python pipeline remains the source of truth
- * for anything that ships; this port exists for interactive preview and
- * is cross-checked against the Python validator in CI
- * (scripts/check_js_render.mjs).
+ * A faithful JavaScript port of src/buzzer/render/{court,text,palettes,
+ * renderer}.py and src/buzzer/scoring.py, so the gallery and Designer
+ * render the same posters as the print pipeline. Cross-checked against
+ * the Python content firewall in CI (scripts/check_js_render.mjs).
  *
  * Facts objects use the same snake_case keys as MomentFacts.
  */
@@ -97,6 +95,30 @@
     };
   }
 
+  // ---- palettes (mirror of render/palettes.py) -----------------------------
+  const PALETTES = [
+    { name: "dusk", ink: "#1A1B26", paper: "#F2E9DC", accent: "#FF6B4A", accent2: "#FFC15E" },
+    { name: "garden", ink: "#1E3A2F", paper: "#F4EBDD", accent: "#E8A33D", accent2: "#D6532B" },
+    { name: "clay", ink: "#2B1D1A", paper: "#F4E7D3", accent: "#E2725B", accent2: "#9CAD7F" },
+    { name: "midnight", ink: "#10151F", paper: "#E9E4D8", accent: "#4D9DE0", accent2: "#E15554" },
+    { name: "royal", ink: "#221C35", paper: "#F2ECDF", accent: "#9B8CFF", accent2: "#FFB17A" },
+    { name: "petrol", ink: "#0E2430", paper: "#EDE9DC", accent: "#5FC8BA", accent2: "#F2B33D" },
+  ];
+
+  function paletteFor(city) {
+    let key = 0;
+    for (const ch of city || "") key += ch.codePointAt(0);
+    return PALETTES[key % PALETTES.length];
+  }
+
+  function darken(hex, factor) {
+    const c = (i) =>
+      Math.round(parseInt(hex.slice(i, i + 2), 16) * factor)
+        .toString(16)
+        .padStart(2, "0");
+    return `#${c(1)}${c(3)}${c(5)}`.toUpperCase();
+  }
+
   // ---- text derivation (port of render/text.py) ---------------------------
   const MONTHS = [
     "JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE",
@@ -175,8 +197,14 @@
 
   // ---- shared layout -------------------------------------------------------
   const SIZES = { "12x16": [12, 16], "18x24": [18, 24], "24x36": [24, 36] };
-  const SANS = "DejaVu Sans, Helvetica, Arial, sans-serif";
-  const MONO = "DejaVu Sans Mono, Courier New, monospace";
+  const DISPLAY = "Anton, Impact, Arial Narrow, sans-serif";
+  const SANS = "Space Grotesk, Helvetica, Arial, sans-serif";
+  const MONO = "Space Mono, DejaVu Sans Mono, Courier New, monospace";
+  const ANTON_GLYPH_W = 0.54;
+
+  function fitDisplay(text, maxWidth, cap) {
+    return Math.min(cap, maxWidth / (ANTON_GLYPH_W * Math.max(text.length, 2)));
+  }
 
   function shotCourtXY(f) {
     if (f.shot_x != null && f.shot_y != null) return [f.shot_x, f.shot_y];
@@ -187,115 +215,134 @@
   // ---- style: trajectory ---------------------------------------------------
   function trajectorySVG(f, w, h) {
     const text = posterText(f);
-    const margin = 0.07 * w;
+    const pal = paletteFor(f.home_city);
+    const margin = 0.075 * w;
     const hair = Math.max(1.5, 0.0016 * w);
     const [sx, sy] = shotCourtXY(f);
 
     const hoopX = w / 2;
-    const hoopY = 0.66 * h;
-    const topSafe = 0.34 * h;
+    const hoopY = 0.555 * h;
+    const courtTop = 0.055 * h;
+    const courtBottom = 0.735 * h;
     let scale = (0.86 * w) / (2 * COURT.HALF_WIDTH);
-    const maxCourtY = (hoopY - topSafe) / scale;
-    if (sy > maxCourtY) scale = (hoopY - topSafe) / sy;
+    if (sy * scale > hoopY - 0.09 * h) scale = (hoopY - 0.09 * h) / sy;
 
     const m = courtMap(hoopX, hoopY, scale);
     const [pxx, pyy] = m.pt(sx, sy);
     const distPx = Math.hypot(pxx - hoopX, pyy - hoopY);
-    const midX = (pxx + hoopX) / 2;
-    const midY = (pyy + hoopY) / 2 - 0.45 * distPx;
+    const arcPath = (lift) => {
+      const mx = (pxx + hoopX) / 2;
+      const my = (pyy + hoopY) / 2 - lift * distPx;
+      return `M ${px(pxx)} ${px(pyy)} Q ${px(mx)} ${px(my)} ${px(hoopX)} ${px(hoopY)}`;
+    };
 
-    const rings = [m.length(100), m.length(200), m.length(300)];
-    const shotRing =
-      f.shot_distance_ft != null ? m.length(f.shot_distance_ft * 10) : null;
-    const clockFs = 0.2 * w;
-    const headFs = 0.026 * w;
-    const scoreFs = 0.03 * w;
-    const footerFs = 0.018 * w;
-    const bl = m.baselineLine();
-    const bb = m.backboardLine();
-    const ink = "#ece7db", faint = "#33363e", accent = "#d96f4e";
-
-    const ringEls = rings
+    const shotRing = f.shot_distance_ft != null ? m.length(f.shot_distance_ft * 10) : null;
+    const glowR = Math.max(shotRing || 0, m.length(220));
+    const ringEls = [5, 10, 15, 20, 25, 30, 35]
+      .map((ft, i) => {
+        const tone = i % 2 ? pal.accent2 : pal.paper;
+        const op = i % 2 ? 0.3 : 0.12;
+        return `<circle cx="${px(hoopX)}" cy="${px(hoopY)}" r="${px(m.length(ft * 10))}" fill="none" stroke="${tone}" stroke-width="${px(hair)}" opacity="${op}"/>`;
+      })
+      .join("\n    ");
+    const echoes = [
+      { lift: 0.52, tone: pal.accent, width: 0.005 * w, alpha: 0.55 },
+      { lift: 0.59, tone: pal.accent2, width: 0.0035 * w, alpha: 0.35 },
+      { lift: 0.66, tone: pal.paper, width: 0.0025 * w, alpha: 0.16 },
+    ]
       .map(
-        (r) =>
-          `<circle cx="${px(hoopX)}" cy="${px(hoopY)}" r="${px(r)}" fill="none" stroke="${faint}" stroke-width="${px(hair)}" stroke-dasharray="${px(hair * 3)} ${px(hair * 7)}"/>`
+        (e) =>
+          `<path d="${arcPath(e.lift)}" fill="none" stroke="${e.tone}" stroke-width="${px(e.width)}" opacity="${e.alpha}" stroke-linecap="round"/>`
       )
       .join("\n    ");
-    const shotRingEl = shotRing
-      ? `<circle cx="${px(hoopX)}" cy="${px(hoopY)}" r="${px(shotRing)}" fill="none" stroke="${accent}" stroke-width="${px(hair)}" opacity="0.45" stroke-dasharray="${px(hair * 5)} ${px(hair * 5)}"/>`
-      : "";
-    const distLabel = text.distance_line
-      ? `<text x="${px(pxx + (pxx < w / 2 ? 0.03 * w : -0.03 * w))}" y="${px(pyy - 0.03 * w)}" font-family="${MONO}" font-size="${px(footerFs)}" fill="${accent}" text-anchor="${pxx < w / 2 ? "start" : "end"}" letter-spacing="${px(footerFs * 0.25)}">${esc(text.distance_line)}</text>`
-      : "";
+
+    const ruleY = 0.76 * h;
+    const clockFs = fitDisplay(text.clock_line, 0.46 * w, 0.2 * w);
+    const scoreFs = 0.034 * w;
+    const footerFs = 0.016 * w;
+    const bl = m.baselineLine();
+    const bb = m.backboardLine();
+    const footerRight = [text.period_line, text.stakes_line, text.distance_line]
+      .filter(Boolean)
+      .join(" — ");
 
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${px(w)}" height="${px(h)}" viewBox="0 0 ${px(w)} ${px(h)}">
   <defs>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="${pal.accent}" stop-opacity="0.42"/>
+      <stop offset="62%" stop-color="${pal.accent}" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="${pal.accent}" stop-opacity="0"/>
+    </radialGradient>
     <clipPath id="court-zone">
-      <rect x="0" y="${px(topSafe)}" width="${px(w)}" height="${px(0.85 * h - topSafe)}"/>
+      <rect x="0" y="${px(courtTop)}" width="${px(w)}" height="${px(courtBottom - courtTop)}"/>
     </clipPath>
   </defs>
-  <rect x="0" y="0" width="${px(w)}" height="${px(h)}" fill="#101115"/>
+  <rect x="0" y="0" width="${px(w)}" height="${px(h)}" fill="${pal.ink}"/>
   <g clip-path="url(#court-zone)">
+    <circle cx="${px(hoopX)}" cy="${px(hoopY)}" r="${px(glowR)}" fill="url(#glow)"/>
     ${ringEls}
-    ${shotRingEl}
-    <path d="${m.threePointPath()}" fill="none" stroke="${faint}" stroke-width="${px(hair)}"/>
-    <line x1="${px(bl[0])}" y1="${px(bl[1])}" x2="${px(bl[2])}" y2="${px(bl[3])}" stroke="${ink}" stroke-width="${px(hair)}" opacity="0.6"/>
-    <line x1="${px(bb[0])}" y1="${px(bb[1])}" x2="${px(bb[2])}" y2="${px(bb[3])}" stroke="${ink}" stroke-width="${px(hair * 2)}"/>
-    <circle cx="${px(hoopX)}" cy="${px(hoopY)}" r="${px(m.length(COURT.HOOP_RADIUS))}" fill="none" stroke="${ink}" stroke-width="${px(hair * 1.6)}"/>
-    <path d="M ${px(pxx)} ${px(pyy)} Q ${px(midX)} ${px(midY)} ${px(hoopX)} ${px(hoopY)}" fill="none" stroke="${accent}" stroke-width="${px(hair * 2.4)}" stroke-dasharray="${px(hair * 7)} ${px(hair * 5)}" stroke-linecap="round"/>
-    <circle cx="${px(pxx)}" cy="${px(pyy)}" r="${px(0.022 * w)}" fill="none" stroke="${accent}" stroke-width="${px(hair)}" opacity="0.6"/>
-    <circle cx="${px(pxx)}" cy="${px(pyy)}" r="${px(0.011 * w)}" fill="${accent}"/>
+    ${shotRing ? `<circle cx="${px(hoopX)}" cy="${px(hoopY)}" r="${px(shotRing)}" fill="none" stroke="${pal.accent}" stroke-width="${px(hair * 1.8)}" opacity="0.85"/>` : ""}
+    <path d="${m.threePointPath()}" fill="none" stroke="${pal.paper}" stroke-width="${px(hair)}" opacity="0.12"/>
+    <line x1="${px(bl[0])}" y1="${px(bl[1])}" x2="${px(bl[2])}" y2="${px(bl[3])}" stroke="${pal.paper}" stroke-width="${px(hair)}" opacity="0.30"/>
+    ${echoes}
+    <path d="${arcPath(0.45)}" fill="none" stroke="${pal.paper}" stroke-width="${px(0.0085 * w)}" stroke-linecap="round"/>
+    <line x1="${px(bb[0])}" y1="${px(bb[1])}" x2="${px(bb[2])}" y2="${px(bb[3])}" stroke="${pal.paper}" stroke-width="${px(hair * 2.4)}"/>
+    <circle cx="${px(hoopX)}" cy="${px(hoopY)}" r="${px(m.length(COURT.HOOP_RADIUS))}" fill="none" stroke="${pal.paper}" stroke-width="${px(hair * 2)}"/>
+    <circle cx="${px(pxx)}" cy="${px(pyy)}" r="${px(0.015 * w * 1.9)}" fill="none" stroke="${pal.accent2}" stroke-width="${px(hair)}" opacity="0.8"/>
+    <circle cx="${px(pxx)}" cy="${px(pyy)}" r="${px(0.015 * w)}" fill="${pal.accent2}" stroke="${pal.ink}" stroke-width="${px(hair)}"/>
   </g>
-  ${distLabel}
-  <text x="${px(margin)}" y="${px(margin + clockFs * 0.92)}" font-family="${SANS}" font-weight="bold" font-size="${px(clockFs)}" fill="${ink}">${esc(text.clock_line)}</text>
-  <text x="${px(w - margin)}" y="${px(margin + 0.03 * w)}" font-family="${SANS}" font-weight="bold" font-size="${px(headFs)}" fill="${ink}" text-anchor="end" letter-spacing="${px(headFs * 0.2)}">${esc(text.period_line)}</text>
-  <text x="${px(w - margin)}" y="${px(margin + 0.064 * w)}" font-family="${SANS}" font-size="${px(headFs * 0.62)}" fill="${accent}" text-anchor="end" letter-spacing="${px(headFs * 0.16)}">${esc(text.stakes_line)}</text>
-  <text x="${px(w / 2)}" y="${px(0.895 * h)}" font-family="${SANS}" font-weight="bold" font-size="${px(scoreFs)}" fill="${ink}" text-anchor="middle" letter-spacing="${px(scoreFs * 0.08)}">${esc(text.score_line)}</text>
-  <text x="${px(w / 2)}" y="${px(0.932 * h)}" font-family="${MONO}" font-size="${px(footerFs)}" fill="${ink}" text-anchor="middle" opacity="0.75" letter-spacing="${px(footerFs * 0.2)}">${esc(text.date_line)}</text>
+  <line x1="${px(margin)}" y1="${px(ruleY)}" x2="${px(w - margin)}" y2="${px(ruleY)}" stroke="${pal.accent}" stroke-width="${px(hair * 3)}"/>
+  <text x="${px(margin)}" y="${px(ruleY + 0.018 * h + clockFs * 0.8)}" font-family="${DISPLAY}" font-size="${px(clockFs)}" fill="${pal.paper}">${esc(text.clock_line)}</text>
+  <text x="${px(w - margin)}" y="${px(ruleY + 0.052 * h)}" font-family="${SANS}" font-weight="700" font-size="${px(scoreFs)}" fill="${pal.paper}" text-anchor="end" letter-spacing="${px(scoreFs * 0.05)}">${esc((f.away_city || "AWAY").toUpperCase())} ${f.away_score}</text>
+  <text x="${px(w - margin)}" y="${px(ruleY + 0.052 * h + 0.046 * w)}" font-family="${SANS}" font-weight="700" font-size="${px(scoreFs)}" fill="${pal.accent2}" text-anchor="end" letter-spacing="${px(scoreFs * 0.05)}">${esc((f.home_city || "HOME").toUpperCase())} ${f.home_score}</text>
+  <text x="${px(margin)}" y="${px(0.948 * h)}" font-family="${MONO}" font-size="${px(footerFs)}" fill="${pal.paper}" opacity="0.65" letter-spacing="${px(footerFs * 0.18)}">${esc(text.date_line)}</text>
+  <text x="${px(w - margin)}" y="${px(0.948 * h)}" font-family="${MONO}" font-size="${px(footerFs)}" fill="${pal.accent2}" text-anchor="end" letter-spacing="${px(footerFs * 0.18)}">${esc(footerRight)}</text>
 </svg>`;
   }
 
   // ---- style: blueprint ----------------------------------------------------
   function blueprintSVG(f, w, h) {
     const text = posterText(f);
-    const margin = 0.07 * w;
+    const pal = paletteFor(f.home_city);
+    const mark = darken(pal.accent2, 0.62);
+    const margin = 0.075 * w;
     const hair = Math.max(1.5, 0.0016 * w);
     let [sx, sy] = shotCourtXY(f);
     sy = Math.min(sy, COURT.HALFCOURT_Y - 10);
 
     const scale = (0.78 * w) / (2 * COURT.HALF_WIDTH);
-    const hoopY = 0.15 * h + COURT.HALFCOURT_Y * scale;
+    const hoopY = 0.165 * h + COURT.HALFCOURT_Y * scale;
     const m = courtMap(w / 2, hoopY, scale);
     const [pxx, pyy] = m.pt(sx, sy);
     const [hx, hy] = m.pt(0, 0);
 
-    const gridStep = w / 24;
-    const titleTop = m.y(COURT.BASELINE_Y) + 0.05 * h;
-    const titleH = h - margin - titleTop;
+    const gridStep = w / 28;
+    const blockTop = m.y(COURT.BASELINE_Y) + 0.052 * h;
+    const blockH = h - margin * 0.85 - blockTop;
     const drawnRatio = Math.round((50 * 12) / (0.78 * (w / 100)));
 
     let title;
-    if (f.takes_lead) title = `GO-AHEAD FIELD GOAL — ${f.points} POINTS`;
-    else if (f.ties_game)
-      title = `FIELD GOAL TIES THE GAME — ${f.points} POINTS`;
-    else title = `FIELD GOAL — ${f.points} POINTS`;
+    if (f.takes_lead) title = "GO-AHEAD FIELD GOAL";
+    else if (f.ties_game) title = "GAME-TIED FIELD GOAL";
+    else title = "FIELD GOAL";
 
-    const rows = [
+    const cells = [
       ["TITLE", title],
+      ["SCORE", text.score_line],
       ["DATE", text.date_line],
       ["LOCATION", (f.home_city || "HOME").toUpperCase()],
-      ["SCORE", text.score_line],
       ["TIME", `${text.period_line} — ${f.clock} REMAINING`],
       ["SCALE", `1:${drawnRatio} — SHEET 1 OF 1`],
     ];
-    const rowH = titleH / rows.length;
-    const labelFs = 0.0135 * w, valueFs = 0.019 * w, monoFs = 0.014 * w;
-    const headFs = 0.03 * w, subFs = 0.0165 * w;
-    const courtStroke = Math.max(2, 0.0022 * w);
-    const ink = "#21405f", faint = "#b9c4d2", accent = "#b3402e";
+    const cellW = (w - 2 * margin) / 3;
+    const cellH = blockH / 2;
+    const labelFs = 0.0115 * w, valueFs = 0.0155 * w, monoFs = 0.014 * w;
+    const headFs = 0.05 * w, subFs = 0.017 * w;
+    const courtStroke = Math.max(2, 0.0028 * w);
     const bb = m.backboardLine();
     const cross = 0.016 * w;
-    const coordX = Math.min(Math.max(pxx, 0.16 * w), 0.84 * w);
+    const reg = 0.011 * w;
+    const coordX = Math.min(Math.max(pxx, 0.17 * w), 0.83 * w);
     const cwY = m.y(COURT.BASELINE_Y) + 0.03 * h;
     const cl = m.x(-COURT.HALF_WIDTH), cr = m.x(COURT.HALF_WIDTH);
     const coordLabel = `X ${sx >= 0 ? "+" : ""}${(sx / 10).toFixed(1)} FT — Y ${sy >= 0 ? "+" : ""}${(sy / 10).toFixed(1)} FT`;
@@ -303,34 +350,39 @@
 
     const gridLines = [];
     for (let gx = gridStep; gx < w; gx += gridStep)
-      gridLines.push(
-        `<line x1="${px(gx)}" y1="0" x2="${px(gx)}" y2="${px(h)}" stroke="${faint}" stroke-width="${px(hair * 0.5)}" opacity="0.45"/>`
-      );
+      gridLines.push(`<line x1="${px(gx)}" y1="0" x2="${px(gx)}" y2="${px(h)}" stroke="${pal.ink}" stroke-width="${px(hair * 0.45)}" opacity="0.10"/>`);
     for (let gy = gridStep; gy < h; gy += gridStep)
-      gridLines.push(
-        `<line x1="0" y1="${px(gy)}" x2="${px(w)}" y2="${px(gy)}" stroke="${faint}" stroke-width="${px(hair * 0.5)}" opacity="0.45"/>`
-      );
+      gridLines.push(`<line x1="0" y1="${px(gy)}" x2="${px(w)}" y2="${px(gy)}" stroke="${pal.ink}" stroke-width="${px(hair * 0.45)}" opacity="0.10"/>`);
 
-    const rowEls = rows
+    const regPts = [
+      [margin * 0.45, margin * 0.45],
+      [w - margin * 0.45, margin * 0.45],
+      [margin * 0.45, h - margin * 0.45],
+      [w - margin * 0.45, h - margin * 0.45],
+    ];
+    const regEls = regPts
+      .map(
+        ([rx, ry]) => `<line x1="${px(rx - reg)}" y1="${px(ry)}" x2="${px(rx + reg)}" y2="${px(ry)}" stroke="${mark}" stroke-width="${px(hair)}"/>
+  <line x1="${px(rx)}" y1="${px(ry - reg)}" x2="${px(rx)}" y2="${px(ry + reg)}" stroke="${mark}" stroke-width="${px(hair)}"/>`
+      )
+      .join("\n  ");
+
+    const cellEls = cells
       .map(([label, value], i) => {
-        const rowY = titleTop + i * rowH;
-        const rule =
-          i === 0
-            ? ""
-            : `<line x1="${px(margin)}" y1="${px(rowY)}" x2="${px(w - margin)}" y2="${px(rowY)}" stroke="${ink}" stroke-width="${px(hair * 0.7)}"/>`;
-        return `${rule}
-    <text x="${px(margin + labelFs)}" y="${px(rowY + rowH * 0.62)}" font-family="${MONO}" font-size="${px(labelFs)}" fill="${ink}" opacity="0.7" letter-spacing="${px(labelFs * 0.2)}">${esc(label)}</text>
-    <text x="${px(margin + (w - margin * 2) * 0.22)}" y="${px(rowY + rowH * 0.64)}" font-family="${MONO}" font-weight="bold" font-size="${px(valueFs)}" fill="${ink}" letter-spacing="${px(valueFs * 0.06)}">${esc(value)}</text>`;
+        const cx = margin + (i % 3) * cellW;
+        const cy = blockTop + Math.floor(i / 3) * cellH;
+        return `<text x="${px(cx + labelFs)}" y="${px(cy + cellH * 0.34)}" font-family="${MONO}" font-size="${px(labelFs)}" fill="${pal.ink}" opacity="0.55" letter-spacing="${px(labelFs * 0.2)}">${esc(label)}</text>
+    <text x="${px(cx + labelFs)}" y="${px(cy + cellH * 0.72)}" font-family="${SANS}" font-weight="700" font-size="${px(valueFs)}" fill="${pal.ink}">${esc(value)}</text>`;
       })
       .join("\n    ");
 
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${px(w)}" height="${px(h)}" viewBox="0 0 ${px(w)} ${px(h)}">
-  <rect x="0" y="0" width="${px(w)}" height="${px(h)}" fill="#f3f0e8"/>
+  <rect x="0" y="0" width="${px(w)}" height="${px(h)}" fill="${pal.paper}"/>
   ${gridLines.join("\n  ")}
-  <rect x="${px(margin * 0.5)}" y="${px(margin * 0.5)}" width="${px(w - margin)}" height="${px(h - margin)}" fill="none" stroke="${ink}" stroke-width="${px(hair * 1.4)}"/>
-  <text x="${px(margin)}" y="${px(margin + 0.02 * w)}" font-family="${MONO}" font-weight="bold" font-size="${px(headFs)}" fill="${ink}" letter-spacing="${px(headFs * 0.18)}">HALF COURT — PLAN VIEW</text>
-  <text x="${px(margin)}" y="${px(margin + 0.052 * w)}" font-family="${MONO}" font-size="${px(subFs)}" fill="${ink}" opacity="0.8" letter-spacing="${px(subFs * 0.2)}">${esc(text.stakes_line)} — ${esc(text.cities_line)}</text>
-  <g fill="none" stroke="${ink}" stroke-width="${px(courtStroke)}">
+  ${regEls}
+  <text x="${px(margin)}" y="${px(margin + 0.046 * w)}" font-family="${DISPLAY}" font-size="${px(headFs)}" fill="${pal.ink}">HALF COURT — PLAN VIEW</text>
+  <text x="${px(margin)}" y="${px(margin + 0.08 * w)}" font-family="${MONO}" font-size="${px(subFs)}" fill="${mark}" letter-spacing="${px(subFs * 0.18)}">${esc(text.stakes_line)} — ${esc(text.cities_line)}</text>
+  <g fill="none" stroke="${pal.ink}" stroke-width="${px(courtStroke)}" stroke-linejoin="round" stroke-linecap="round">
     <path d="${m.sidelinePath()}"/>
     <path d="${m.halfcourtCirclePath()}"/>
     <path d="${m.threePointPath()}"/>
@@ -340,21 +392,24 @@
     <line x1="${px(bb[0])}" y1="${px(bb[1])}" x2="${px(bb[2])}" y2="${px(bb[3])}"/>
     <circle cx="${px(hx)}" cy="${px(hy)}" r="${px(m.length(COURT.HOOP_RADIUS))}"/>
   </g>
-  <line x1="${px(pxx)}" y1="${px(pyy)}" x2="${px(hx)}" y2="${px(hy)}" stroke="${accent}" stroke-width="${px(hair * 1.3)}" stroke-dasharray="${px(hair * 6)} ${px(hair * 4)}"/>
-  <circle cx="${px(hx)}" cy="${px(hy)}" r="${px(hair * 2.5)}" fill="${accent}"/>
-  <circle cx="${px(pxx)}" cy="${px(pyy)}" r="${px(hair * 2.5)}" fill="${accent}"/>
-  <line x1="${px(pxx - cross)}" y1="${px(pyy)}" x2="${px(pxx + cross)}" y2="${px(pyy)}" stroke="${accent}" stroke-width="${px(hair)}"/>
-  <line x1="${px(pxx)}" y1="${px(pyy - cross)}" x2="${px(pxx)}" y2="${px(pyy + cross)}" stroke="${accent}" stroke-width="${px(hair)}"/>
-  <circle cx="${px(pxx)}" cy="${px(pyy)}" r="${px(cross * 0.62)}" fill="none" stroke="${accent}" stroke-width="${px(hair)}"/>
-  <text x="${px(coordX)}" y="${px(pyy - 0.024 * w)}" font-family="${MONO}" font-size="${px(monoFs)}" fill="${accent}" text-anchor="middle" letter-spacing="${px(monoFs * 0.08)}">${esc(coordLabel)}</text>
-  <text x="${px((pxx + hx) / 2 + 0.03 * w)}" y="${px((pyy + hy) / 2)}" font-family="${MONO}" font-weight="bold" font-size="${px(monoFs * 1.3)}" fill="${accent}" letter-spacing="${px(monoFs * 0.12)}">${esc(dimLabel)}</text>
-  <line x1="${px(cl)}" y1="${px(cwY)}" x2="${px(cr)}" y2="${px(cwY)}" stroke="${ink}" stroke-width="${px(hair * 0.8)}"/>
-  <line x1="${px(cl)}" y1="${px(cwY - hair * 5)}" x2="${px(cl)}" y2="${px(cwY + hair * 5)}" stroke="${ink}" stroke-width="${px(hair * 0.8)}"/>
-  <line x1="${px(cr)}" y1="${px(cwY - hair * 5)}" x2="${px(cr)}" y2="${px(cwY + hair * 5)}" stroke="${ink}" stroke-width="${px(hair * 0.8)}"/>
-  <text x="${px(w / 2)}" y="${px(cwY - monoFs * 0.6)}" font-family="${MONO}" font-size="${px(monoFs)}" fill="${ink}" text-anchor="middle">50 FT</text>
+  <line x1="${px(pxx)}" y1="${px(pyy)}" x2="${px(hx)}" y2="${px(hy)}" stroke="${mark}" stroke-width="${px(hair * 1.4)}" stroke-dasharray="${px(hair * 6)} ${px(hair * 4)}"/>
+  <circle cx="${px(hx)}" cy="${px(hy)}" r="${px(hair * 2.6)}" fill="${mark}"/>
+  <circle cx="${px(pxx)}" cy="${px(pyy)}" r="${px(hair * 2.6)}" fill="${mark}"/>
+  <line x1="${px(pxx - cross)}" y1="${px(pyy)}" x2="${px(pxx + cross)}" y2="${px(pyy)}" stroke="${mark}" stroke-width="${px(hair)}"/>
+  <line x1="${px(pxx)}" y1="${px(pyy - cross)}" x2="${px(pxx)}" y2="${px(pyy + cross)}" stroke="${mark}" stroke-width="${px(hair)}"/>
+  <circle cx="${px(pxx)}" cy="${px(pyy)}" r="${px(cross * 0.62)}" fill="none" stroke="${mark}" stroke-width="${px(hair)}"/>
+  <text x="${px(coordX)}" y="${px(pyy - 0.026 * w)}" font-family="${MONO}" font-size="${px(monoFs)}" fill="${mark}" text-anchor="middle">${esc(coordLabel)}</text>
+  <text x="${px((pxx + hx) / 2 + 0.03 * w)}" y="${px((pyy + hy) / 2)}" font-family="${MONO}" font-weight="700" font-size="${px(monoFs * 1.35)}" fill="${mark}">${esc(dimLabel)}</text>
+  <line x1="${px(cl)}" y1="${px(cwY)}" x2="${px(cr)}" y2="${px(cwY)}" stroke="${pal.ink}" stroke-width="${px(hair * 0.8)}"/>
+  <line x1="${px(cl)}" y1="${px(cwY - hair * 5)}" x2="${px(cl)}" y2="${px(cwY + hair * 5)}" stroke="${pal.ink}" stroke-width="${px(hair * 0.8)}"/>
+  <line x1="${px(cr)}" y1="${px(cwY - hair * 5)}" x2="${px(cr)}" y2="${px(cwY + hair * 5)}" stroke="${pal.ink}" stroke-width="${px(hair * 0.8)}"/>
+  <text x="${px(w / 2)}" y="${px(cwY - monoFs * 0.6)}" font-family="${MONO}" font-size="${px(monoFs)}" fill="${pal.ink}" text-anchor="middle">50 FT</text>
   <g>
-    <rect x="${px(margin)}" y="${px(titleTop)}" width="${px(w - margin * 2)}" height="${px(titleH)}" fill="none" stroke="${ink}" stroke-width="${px(hair * 1.4)}"/>
-    ${rowEls}
+    <rect x="${px(margin)}" y="${px(blockTop)}" width="${px(w - margin * 2)}" height="${px(blockH)}" fill="none" stroke="${pal.ink}" stroke-width="${px(hair * 1.6)}"/>
+    <line x1="${px(margin)}" y1="${px(blockTop + cellH)}" x2="${px(w - margin)}" y2="${px(blockTop + cellH)}" stroke="${pal.ink}" stroke-width="${px(hair * 0.8)}"/>
+    <line x1="${px(margin + cellW)}" y1="${px(blockTop)}" x2="${px(margin + cellW)}" y2="${px(blockTop + blockH)}" stroke="${pal.ink}" stroke-width="${px(hair * 0.8)}"/>
+    <line x1="${px(margin + cellW * 2)}" y1="${px(blockTop)}" x2="${px(margin + cellW * 2)}" y2="${px(blockTop + blockH)}" stroke="${pal.ink}" stroke-width="${px(hair * 0.8)}"/>
+    ${cellEls}
   </g>
 </svg>`;
   }
@@ -362,41 +417,48 @@
   // ---- style: type -----------------------------------------------------------
   function typeSVG(f, w, h) {
     const text = posterText(f);
-    const margin = 0.07 * w;
-    const hair = Math.max(1.5, 0.0016 * w);
-    const ink = "#16161a", accent = "#c2391f";
+    const pal = paletteFor(f.home_city);
+    const margin = 0.075 * w;
+    const cw = w - 2 * margin;
+    const footerFs = 0.0165 * w;
 
-    const rows = [[text.clock_value, `${text.period_line} — ON THE CLOCK`]];
-    if (text.deficit_value) rows.push([text.deficit_value, "POINT DEFICIT"]);
-    if (f.shot_distance_ft != null)
-      rows.push([f.shot_distance_ft.toFixed(0), "FOOT SHOT"]);
-    if (f.takes_lead) rows.push([String(f.points), "POINTS FOR THE LEAD"]);
-    else if (f.ties_game) rows.push([String(f.points), "POINTS TO TIE THE GAME"]);
-    else rows.push([String(f.points), "POINTS"]);
+    const stack = [[text.clock_value, pal.paper]];
+    if (text.deficit_value) stack.push([`DOWN ${text.deficit_value}`, pal.accent]);
+    if (f.shot_distance_ft != null && f.shot_distance_ft >= 1)
+      stack.push([`FROM ${f.shot_distance_ft.toFixed(0)} FEET`, pal.paper]);
+    if (f.takes_lead) stack.push(["FOR THE LEAD", pal.accent2]);
+    else if (f.ties_game) stack.push(["TIES THE GAME", pal.accent2]);
+    else stack.push([`${f.points} POINTS`, pal.accent2]);
 
-    const zoneTop = 0.135 * h, zoneBottom = 0.82 * h;
-    const rowH = (zoneBottom - zoneTop) / rows.length;
-    const headFs = 0.024 * w, captionFs = 0.02 * w;
-    const scoreFs = 0.03 * w, footerFs = 0.0175 * w;
+    const sizes = stack.map(([value]) => fitDisplay(value, cw, 0.175 * h));
+    const natural = sizes.reduce((acc, fs) => acc + fs * 1.04, 0);
+    const stackTop = 0.07 * h, stackBottom = 0.715 * h;
+    const gapExtra = Math.max(0, stackBottom - stackTop - natural) / Math.max(stack.length, 1);
 
-    const rowEls = rows
-      .map(([value, caption], i) => {
-        const fs = Math.min(rowH * 0.66, (0.82 * w) / (0.62 * Math.max(value.length, 2)));
-        const y = zoneTop + i * rowH;
-        return `<line x1="${px(margin)}" y1="${px(y)}" x2="${px(w - margin)}" y2="${px(y)}" stroke="${ink}" stroke-width="${px(hair * 1.2)}"/>
-  <text x="${px(margin)}" y="${px(y + rowH * 0.3 + fs * 0.36)}" font-family="${SANS}" font-weight="bold" font-size="${px(fs)}" fill="${ink}" letter-spacing="${px(fs * -0.02)}">${esc(value)}</text>
-  <text x="${px(w - margin)}" y="${px(y + rowH * 0.86)}" font-family="${MONO}" font-size="${px(captionFs)}" fill="${accent}" text-anchor="end" letter-spacing="${px(captionFs * 0.22)}">${esc(caption)}</text>`;
+    let cursor = stackTop;
+    const lineEls = stack
+      .map(([value, tone], i) => {
+        const fs = sizes[i];
+        cursor += fs * 0.84;
+        const el = `<text x="${px(margin)}" y="${px(cursor)}" font-family="${DISPLAY}" font-size="${px(fs)}" fill="${tone}">${esc(value)}</text>`;
+        cursor += fs * 0.2 + gapExtra;
+        return el;
       })
       .join("\n  ");
 
+    const bandTop = 0.755 * h;
+    const bandH = 0.085 * h;
+    const bandText = text.score_line;
+    const bandFs = Math.min(bandH * 0.56, (cw * 0.94) / (ANTON_GLYPH_W * Math.max(bandText.length, 2)));
+
     return `<svg xmlns="http://www.w3.org/2000/svg" width="${px(w)}" height="${px(h)}" viewBox="0 0 ${px(w)} ${px(h)}">
-  <rect x="0" y="0" width="${px(w)}" height="${px(h)}" fill="#efe9dc"/>
-  <text x="${px(margin)}" y="${px(0.075 * h)}" font-family="${SANS}" font-weight="bold" font-size="${px(headFs)}" fill="${ink}" letter-spacing="${px(headFs * 0.18)}">${esc(text.stakes_line)}</text>
-  <text x="${px(w - margin)}" y="${px(0.075 * h)}" font-family="${SANS}" font-size="${px(headFs)}" fill="${accent}" text-anchor="end" letter-spacing="${px(headFs * 0.14)}">${esc(text.period_line)}</text>
-  ${rowEls}
-  <line x1="${px(margin)}" y1="${px(zoneBottom)}" x2="${px(w - margin)}" y2="${px(zoneBottom)}" stroke="${ink}" stroke-width="${px(hair * 1.2)}"/>
-  <text x="${px(margin)}" y="${px(0.875 * h)}" font-family="${SANS}" font-weight="bold" font-size="${px(scoreFs)}" fill="${ink}" letter-spacing="${px(scoreFs * 0.04)}">${esc(text.score_line)}</text>
-  <text x="${px(margin)}" y="${px(0.915 * h)}" font-family="${MONO}" font-size="${px(footerFs)}" fill="${ink}" opacity="0.8" letter-spacing="${px(footerFs * 0.2)}">${esc(text.date_line)}</text>
+  <rect x="0" y="0" width="${px(w)}" height="${px(h)}" fill="${pal.ink}"/>
+  ${lineEls}
+  <rect x="0" y="${px(bandTop)}" width="${px(w)}" height="${px(bandH)}" fill="${pal.accent}"/>
+  <text x="${px(w / 2)}" y="${px(bandTop + bandH / 2 + bandFs * 0.34)}" font-family="${DISPLAY}" font-size="${px(bandFs)}" fill="${pal.ink}" text-anchor="middle" letter-spacing="${px(bandFs * 0.02)}">${esc(bandText)}</text>
+  <text x="${px(margin)}" y="${px(0.945 * h)}" font-family="${MONO}" font-size="${px(footerFs)}" fill="${pal.paper}" opacity="0.7" letter-spacing="${px(footerFs * 0.16)}">${esc(text.date_line)}</text>
+  <text x="${px(w / 2)}" y="${px(0.945 * h)}" font-family="${MONO}" font-size="${px(footerFs)}" fill="${pal.accent2}" text-anchor="middle" letter-spacing="${px(footerFs * 0.16)}">${esc(text.stakes_line)}</text>
+  <text x="${px(w - margin)}" y="${px(0.945 * h)}" font-family="${MONO}" font-size="${px(footerFs)}" fill="${pal.paper}" opacity="0.7" text-anchor="end" letter-spacing="${px(footerFs * 0.16)}">${esc(text.period_line)} — ${esc(f.clock)}</text>
 </svg>`;
   }
 
@@ -418,6 +480,7 @@
     periodDisplay,
     dateDisplay,
     courtMap,
+    paletteFor,
     COURT,
     SIZES,
     STYLES: ["trajectory", "blueprint", "type"],
