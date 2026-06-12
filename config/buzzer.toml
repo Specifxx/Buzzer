@@ -1,0 +1,33 @@
+# Buzzer publishing configuration.
+#
+# SECRETS DO NOT GO HERE — API tokens live in .env (see .env.example).
+#
+# The Printify catalogue ids below are account-independent but MUST be
+# verified once against the live catalogue before going live:
+#
+#   uv run buzzer printify blueprints --search poster
+#   uv run buzzer printify variants --blueprint <id> --provider <id>
+#
+# `buzzer ship --live` refuses to run while any id is 0.
+
+[printify]
+blueprint_id = 0        # e.g. the "Matte Vertical Posters" blueprint
+print_provider_id = 0   # pick one from `buzzer printify variants`
+sales_channel = "shopify"
+
+[printify.variant_ids]  # size -> variant id within blueprint/provider
+"12x16" = 0
+"18x24" = 0
+"24x36" = 0
+
+[pricing]
+# margin = (price - cost) / price; 0.60 means price = 2.5x print cost.
+# Prices round UP to the x.95 ending.
+target_margin = 0.60
+round_ending = 0.95
+
+[pricing.print_costs_usd]
+# Verify against your provider's current price sheet before going live.
+"12x16" = 9.50
+"18x24" = 13.75
+"24x36" = 19.00

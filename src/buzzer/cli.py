@@ -9,8 +9,13 @@ import json
 import re
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import click
+
+if TYPE_CHECKING:
+    from buzzer.publish.printify import PrintifyClient
+    from buzzer.publish.ship import ShipPlan
 
 from buzzer.detect import (
     DEFAULT_CACHE_DIR,
@@ -245,6 +250,183 @@ def catalogue(
             f"(offline): {', '.join(result.seasons_skipped)}",
             err=True,
         )
+
+
+def _format_ship_plan(plan: ShipPlan) -> str:
+    lines = [f"SHIP PLAN — game {plan.game_id}"]
+    for warning in plan.warnings:
+        lines.append(f"  ! {warning}")
+    for item in plan.items:
+        action = f"UPDATE {item.existing_product_id}" if item.existing_product_id else "CREATE"
+        lines.append(f"\n[{action}] {item.title}")
+        lines.append(f"  key: {item.key}")
+        lines.append(f"  tags: {', '.join(item.tags)}")
+        for v in item.variants:
+            lines.append(
+                f"  {v.size}: cost ${v.cost_usd:.2f} -> price ${v.price_usd:.2f} "
+                f"(variant {v.variant_id or 'UNSET'})"
+            )
+    return "\n".join(lines)
+
+
+@main.command()
+@click.option("--game", "game_id", required=True, help="Game ID, e.g. 0042500401.")
+@click.option("--top", default=1, show_default=True, help="Ship the top N moments of the game.")
+@click.option(
+    "--style",
+    default="all",
+    show_default=True,
+    type=click.Choice(["trajectory", "blueprint", "type", "all"]),
+)
+@click.option("--min-score", default=60, show_default=True)
+@click.option(
+    "--live", is_flag=True, help="Actually create draft products on Printify (default: dry run)."
+)
+@click.option(
+    "--publish",
+    is_flag=True,
+    help="With --live: also publish to the connected store (extra confirmation).",
+)
+@click.option("--yes", is_flag=True, help="Skip confirmations (for automation).")
+@click.option(
+    "--out-dir", type=click.Path(path_type=Path), default=Path("renders"), show_default=True
+)
+@click.option(
+    "--state-file",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="Idempotency state file. [default: state/printify_products.json]",
+)
+@click.option(
+    "--config",
+    "config_path",
+    type=click.Path(path_type=Path),
+    default=None,
+    help="Publishing config. [default: config/buzzer.toml]",
+)
+@click.option(
+    "--cache-dir", type=click.Path(path_type=Path), default=DEFAULT_CACHE_DIR, show_default=True
+)
+@click.option("--offline", is_flag=True, help="Never hit stats.nba.com; use cache only.")
+def ship(
+    game_id: str,
+    top: int,
+    style: str,
+    min_score: int,
+    live: bool,
+    publish: bool,
+    yes: bool,
+    out_dir: Path,
+    state_file: Path | None,
+    config_path: Path | None,
+    cache_dir: Path,
+    offline: bool,
+) -> None:
+    """Detect, render, validate and publish a game's best moments.
+
+    Dry run by default: shows the full plan (products, prices, files)
+    and creates local renders, but makes NO API calls. Add --live to
+    create Printify drafts, and --live --publish to go live on the
+    store. Every live step asks for confirmation unless --yes.
+    """
+    from buzzer.publish import PrintifyClient, PublishState, execute_plan, load_config, plan_ship
+    from buzzer.publish.config import DEFAULT_CONFIG_PATH, load_secrets
+    from buzzer.publish.state import DEFAULT_STATE_PATH
+    from buzzer.render import STYLES
+
+    config = load_config(config_path or DEFAULT_CONFIG_PATH)
+    state = PublishState.load(state_file or DEFAULT_STATE_PATH)
+    source = build_source(cache_dir=cache_dir, offline=offline)
+
+    plan = plan_ship(
+        game_id,
+        source=source,
+        config=config,
+        state=state,
+        out_dir=out_dir,
+        top=top,
+        styles=STYLES if style == "all" else (style,),
+        min_score=min_score,
+    )
+    click.echo(_format_ship_plan(plan))
+    if not plan.items:
+        sys.exit(1)
+
+    if not live:
+        click.echo("\nDRY RUN — no API calls were made. Re-run with --live to create drafts.")
+        return
+
+    token, shop_id = load_secrets()
+    client = PrintifyClient(token=token, shop_id=shop_id)
+    confirm = (lambda message: True) if yes else (lambda message: click.confirm(message))
+    report = execute_plan(plan, client, config, state, confirm=confirm, publish=publish)
+    if report.aborted:
+        click.echo("aborted — nothing further was sent.", err=True)
+        sys.exit(2)
+    click.echo(
+        f"\ndone: {len(report.created)} created, {len(report.updated)} updated, "
+        f"{len(report.published)} published "
+        f"({'drafts only' if not publish else 'live on store'})"
+    )
+
+
+@main.group()
+def printify() -> None:
+    """Live Printify helpers (require PRINTIFY_API_TOKEN in .env)."""
+
+
+def _printify_client(need_shop: bool = True) -> PrintifyClient:
+    import os
+
+    from dotenv import load_dotenv
+
+    from buzzer.publish import PrintifyClient
+
+    load_dotenv()
+    token = os.environ.get("PRINTIFY_API_TOKEN", "")
+    if not token:
+        raise click.UsageError("PRINTIFY_API_TOKEN is not set (see .env.example)")
+    shop_id = os.environ.get("PRINTIFY_SHOP_ID", "")
+    if need_shop and not shop_id:
+        raise click.UsageError("PRINTIFY_SHOP_ID is not set; run `buzzer printify shops` first")
+    return PrintifyClient(token=token, shop_id=shop_id)
+
+
+@printify.command()
+def shops() -> None:
+    """List connected shops (use the id as PRINTIFY_SHOP_ID)."""
+    for shop in _printify_client(need_shop=False).shops():
+        click.echo(f"{shop['id']}  {shop.get('title', '')}  ({shop.get('sales_channel', '')})")
+
+
+@printify.command()
+@click.option("--search", default="poster", show_default=True)
+def blueprints(search: str) -> None:
+    """Find poster blueprints in the Printify catalogue."""
+    for bp in _printify_client(need_shop=False).blueprints():
+        if search.lower() in str(bp.get("title", "")).lower():
+            click.echo(f"{bp['id']}  {bp['title']}")
+
+
+@printify.command()
+@click.option("--blueprint", "blueprint_id", required=True, type=int)
+@click.option(
+    "--provider",
+    "provider_id",
+    type=int,
+    default=None,
+    help="Print provider id; omit to list providers first.",
+)
+def variants(blueprint_id: int, provider_id: int | None) -> None:
+    """List print providers / variant ids for a blueprint."""
+    client = _printify_client(need_shop=False)
+    if provider_id is None:
+        for provider in client.print_providers(blueprint_id):
+            click.echo(f"provider {provider['id']}  {provider.get('title', '')}")
+        return
+    data = client.variants(blueprint_id, provider_id)
+    for variant in data.get("variants", []):
+        click.echo(f"{variant['id']}  {variant.get('title', '')}")
 
 
 if __name__ == "__main__":

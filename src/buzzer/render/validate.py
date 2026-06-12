@@ -158,6 +158,12 @@ ALLOWED_WORDS: frozenset[str] = frozenset(
         "DECOR",
         "GIFT",
         "CLUTCH",
+        # product style names (generic descriptive words)
+        "TRAJECTORY",
+        "BLUEPRINT",
+        "TYPE",
+        "STYLE",
+        "ORIGINAL",
     }
 )
 
