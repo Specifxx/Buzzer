@@ -139,6 +139,25 @@ ALLOWED_WORDS: frozenset[str] = frozenset(
         "SECONDS",
         "MINUTE",
         "MINUTES",
+        # listing copy (catalogue titles, descriptions, SEO tags)
+        "BEATER",
+        "AFTER",
+        "TRAILING",
+        "THAT",
+        "IT",
+        "FROM",
+        "WITH",
+        "TWO",
+        "THREE",
+        "BASKETBALL",
+        "POSTER",
+        "PRINT",
+        "MINIMALIST",
+        "SPORTS",
+        "WALL",
+        "DECOR",
+        "GIFT",
+        "CLUTCH",
     }
 )
 
@@ -211,6 +230,23 @@ def validate_text_value(value: str, field: str = "value") -> None:
         if name in upper:
             violations.append(f"{field}: player name {name!r} in {value!r}")
 
+    if violations:
+        raise ContentViolationError(violations)
+
+
+def validate_listing_text(value: str, allowed_cities: tuple[str | None, ...] = ()) -> None:
+    """Validate customer-facing listing copy (titles, descriptions, tags).
+
+    Applies the input blocklists AND the output allowlist: listings are
+    public text, so they get the same treatment as poster text.
+    """
+    validate_text_value(value, field="listing")
+    city_words = _allowed_city_words(allowed_cities)
+    violations = [
+        f"listing token {token!r} not in factual allowlist (in {value!r})"
+        for token in _tokens(value)
+        if len(token) > 1 and token not in ALLOWED_WORDS and token not in city_words
+    ]
     if violations:
         raise ContentViolationError(violations)
 

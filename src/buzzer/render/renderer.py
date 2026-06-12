@@ -330,11 +330,12 @@ def render_moment(
     out_dir: Path,
     print_file: bool = True,
     preview: bool = True,
+    subdir: str | None = None,
 ) -> list[Path]:
     """Render one moment/style/size to SVG + print PNG + web preview PNG."""
     svg = render_svg(moment.facts, style, size)
     stem = f"{moment.moment_id.replace(':', '-')}_{style}_{size}"
-    target_dir = out_dir / moment.moment_id.replace(":", "-")
+    target_dir = out_dir / (subdir or moment.moment_id.replace(":", "-"))
     target_dir.mkdir(parents=True, exist_ok=True)
 
     outputs: list[Path] = []

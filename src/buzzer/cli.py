@@ -178,5 +178,74 @@ def render(
         click.echo(str(path))
 
 
+@main.command()
+@click.option(
+    "--seasons-back",
+    "n_seasons",
+    default=30,
+    show_default=True,
+    help="How many playoff seasons to scan, counting back from the current one.",
+)
+@click.option("--top", default=100, show_default=True, help="How many moments to keep.")
+@click.option(
+    "--styles",
+    default="all",
+    show_default=True,
+    type=click.Choice(["trajectory", "blueprint", "type", "all"]),
+)
+@click.option(
+    "--sizes",
+    default="18x24",
+    show_default=True,
+    type=click.Choice(["12x16", "18x24", "24x36", "all"]),
+)
+@click.option(
+    "--print-files",
+    is_flag=True,
+    help="Also export 300-DPI print PNGs (large; default is SVG + preview only).",
+)
+@click.option("--min-score", default=DEFAULT_MIN_SCORE, show_default=True)
+@click.option(
+    "--out-dir", type=click.Path(path_type=Path), default=Path("catalogue"), show_default=True
+)
+@click.option(
+    "--cache-dir", type=click.Path(path_type=Path), default=DEFAULT_CACHE_DIR, show_default=True
+)
+@click.option("--offline", is_flag=True, help="Never hit the network; use cache only.")
+def catalogue(
+    n_seasons: int,
+    top: int,
+    styles: str,
+    sizes: str,
+    print_files: bool,
+    min_score: int,
+    out_dir: Path,
+    cache_dir: Path,
+    offline: bool,
+) -> None:
+    """Build the back-catalogue: scan playoff seasons, render top moments."""
+    from buzzer.catalogue import build_catalogue, seasons_back
+    from buzzer.render import SIZES, STYLES
+
+    source = build_source(cache_dir=cache_dir, offline=offline)
+    result = build_catalogue(
+        seasons=seasons_back(n_seasons),
+        top_n=top,
+        out_dir=out_dir,
+        source=source,
+        styles=STYLES if styles == "all" else (styles,),
+        sizes=tuple(sorted(SIZES)) if sizes == "all" else (sizes,),
+        print_files=print_files,
+        min_score=min_score,
+    )
+    click.echo(f"catalogue: {len(result.moments)} moments -> {result.manifest_path}")
+    if result.seasons_skipped:
+        click.echo(
+            f"skipped {len(result.seasons_skipped)} season(s) with no cached data "
+            f"(offline): {', '.join(result.seasons_skipped)}",
+            err=True,
+        )
+
+
 if __name__ == "__main__":
     main()
