@@ -22,6 +22,7 @@ def test_finals_game_top_moment_is_the_buzzer_beater(source: CachedSource) -> No
     assert f.is_playoff
     assert f.shot_distance_ft == 27.0
     assert f.shot_x is not None and f.shot_y is not None
+    assert (f.playoff_round, f.series_game) == (4, 1)  # decoded from the game id
     assert (f.home_score, f.away_score) == (101, 100)
     assert f.game_date == "2026-06-04"
     assert (f.home_city, f.away_city) == ("Boston", "Denver")

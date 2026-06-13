@@ -26,18 +26,39 @@
   <!-- ============================== CATALOGUE ============================ -->
   <main id="tab-catalogue" class="tabpane active">
     <section class="toolbar">
-      <div class="chipset" id="filter-chips">
-        <button class="chip active" data-filter="all">All</button>
-        <button class="chip" data-filter="BUZZER">Buzzer beaters</button>
-        <button class="chip" data-filter="OT">Overtime</button>
-        <button class="chip" data-filter="COMEBACK">Comebacks</button>
-        <button class="chip" data-filter="DEEP">Deep range</button>
+      <div class="filter-row">
+        <input id="f-search" type="search" placeholder="Search title or city…" />
+        <select id="f-city"><option value="all">All cities</option></select>
+        <select id="f-decade">
+          <option value="all">All decades</option>
+          <option value="1990">1990s</option>
+          <option value="2000">2000s</option>
+          <option value="2010">2010s</option>
+          <option value="2020">2020s</option>
+        </select>
+        <select id="f-sort">
+          <option value="score">Most iconic</option>
+          <option value="new">Newest first</option>
+          <option value="old">Oldest first</option>
+          <option value="city">City A–Z</option>
+        </select>
       </div>
-      <div class="chipset" id="style-chips">
-        <button class="chip active" data-style="trajectory">Trajectory</button>
-        <button class="chip" data-style="blueprint">Blueprint</button>
-        <button class="chip" data-style="type">Type</button>
+      <div class="filter-row2">
+        <div class="chipset" id="filter-chips">
+          <button class="chip active" data-filter="all">All</button>
+          <button class="chip" data-filter="GAME-7">Game 7s</button>
+          <button class="chip" data-filter="BUZZER">Buzzer beaters</button>
+          <button class="chip" data-filter="COMEBACK">Comebacks</button>
+          <button class="chip" data-filter="OT">Overtime</button>
+          <button class="chip" data-filter="DEEP">Deep range</button>
+        </div>
+        <div class="chipset" id="style-chips">
+          <button class="chip active" data-style="trajectory">Trajectory</button>
+          <button class="chip" data-style="blueprint">Blueprint</button>
+          <button class="chip" data-style="type">Type</button>
+        </div>
       </div>
+      <div class="result-count" id="result-count"></div>
     </section>
     <section id="grid" class="grid" aria-live="polite"></section>
   </main>
@@ -118,6 +139,23 @@
         <div class="control row">
           <label>Date <input type="date" id="c-date" value="2026-06-04" /></label>
           <label class="checkline"><input type="checkbox" id="c-playoffs" checked /> Playoffs</label>
+        </div>
+
+        <div class="control row">
+          <label>Playoff round
+            <select id="c-round">
+              <option value="">—</option>
+              <option value="1">Round 1</option><option value="2">Round 2</option>
+              <option value="3">Round 3</option><option value="4">Round 4</option>
+            </select>
+          </label>
+          <label>Series game
+            <select id="c-seriesgame">
+              <option value="">—</option>
+              <option>1</option><option>2</option><option>3</option><option>4</option>
+              <option>5</option><option>6</option><option value="7">7 — Game 7</option>
+            </select>
+          </label>
         </div>
 
         <div class="scorebox">

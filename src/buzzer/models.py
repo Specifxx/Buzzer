@@ -73,6 +73,11 @@ class MomentFacts:
     shot_distance_ft: float | None
     shot_x: float | None  # tenths of feet from basket centre (nba_api LOC_X)
     shot_y: float | None
+    # Playoff series position, decoded from the game id (004YY00RMG):
+    # round 1-4 and game 1-7. "Game 7" is the single biggest recognition
+    # trigger a factual poster can carry.
+    playoff_round: int | None = None
+    series_game: int | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

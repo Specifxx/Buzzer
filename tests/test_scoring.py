@@ -58,6 +58,14 @@ def test_comeback_only_counts_when_shot_ties_or_takes_lead() -> None:
     assert score_moment(no_lead) == score_moment(replace(no_lead, deficit_overcome=0))
 
 
+def test_series_stakes_raise_the_score() -> None:
+    base = replace(BUZZER_BEATER, shot_distance_ft=12.0, deficit_overcome=0)  # off the ceiling
+    round_one = replace(base, playoff_round=1, series_game=1)
+    finals_g7 = replace(base, playoff_round=4, series_game=7)
+    assert score_moment(round_one) == score_moment(base)  # round 1 game 1 adds nothing
+    assert score_moment(finals_g7) == score_moment(base) + 6 + 8  # round depth + game 7
+
+
 def test_score_is_clamped_to_0_100() -> None:
     maxed = replace(
         BUZZER_BEATER, seconds_remaining=0.0, deficit_overcome=30, shot_distance_ft=35.0

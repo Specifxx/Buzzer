@@ -35,6 +35,8 @@ def title_for(facts: MomentFacts) -> str:
 
     if facts.deficit_overcome >= 8 and (facts.takes_lead or facts.ties_game):
         base = f"Down {facts.deficit_overcome}: {base}"
+    if facts.series_game == 7:
+        base = f"Game 7: {base}"
 
     where = f"{facts.home_city}, " if facts.home_city else ""
     title = f"{base} — {where}{date_display(facts.game_date).title()}"
@@ -61,6 +63,8 @@ def description_for(facts: MomentFacts) -> str:
     away = facts.away_city or "Away"
     home = facts.home_city or "Home"
     parts.append(f"{away} {facts.away_score}, {home} {facts.home_score}.")
+    if facts.playoff_round is not None and facts.series_game is not None:
+        parts.append(f"Round {facts.playoff_round}, game {facts.series_game}.")
     parts.append(
         f"{'Playoffs' if facts.is_playoff else 'Regular season'}, "
         f"{date_display(facts.game_date).title()}."
@@ -86,6 +90,8 @@ def tags_for(facts: MomentFacts) -> list[str]:
         tags.append("playoffs poster")
     if facts.takes_lead and _is_buzzer(facts):
         tags.append("buzzer beater poster")
+    if facts.series_game == 7:
+        tags.append("game 7 poster")
     if facts.period > 4:
         tags.append("overtime basketball")
     for tag in tags:

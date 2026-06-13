@@ -148,6 +148,10 @@
       stakes_line: f.is_playoff ? "PLAYOFFS" : "REGULAR SEASON",
       distance_line:
         f.shot_distance_ft != null ? `${f.shot_distance_ft.toFixed(0)} FT` : "",
+      series_line:
+        f.playoff_round != null && f.series_game != null
+          ? `ROUND ${f.playoff_round} — GAME ${f.series_game}`
+          : "",
       deficit_value:
         f.deficit_overcome >= 5 && (f.takes_lead || f.ties_game)
           ? String(f.deficit_overcome)
@@ -192,6 +196,8 @@
       if (f.shot_distance_ft >= 30) score += 8;
       else if (f.shot_distance_ft >= 25) score += 5;
     }
+    if (f.playoff_round != null) score += (f.playoff_round - 1) * 2;
+    if (f.series_game === 7) score += 8;
     return Math.max(0, Math.min(100, Math.round(score)));
   }
 
@@ -238,7 +244,7 @@
 
     const shotRing = f.shot_distance_ft != null ? m.length(f.shot_distance_ft * 10) : null;
     const glowR = Math.max(shotRing || 0, m.length(220));
-    const ringEls = [5, 10, 15, 20, 25, 30, 35]
+    const ringEls = [10, 20, 30]
       .map((ft, i) => {
         const tone = i % 2 ? pal.accent2 : pal.paper;
         const op = i % 2 ? 0.3 : 0.12;
@@ -262,7 +268,11 @@
     const footerFs = 0.016 * w;
     const bl = m.baselineLine();
     const bb = m.backboardLine();
-    const footerRight = [text.period_line, text.stakes_line, text.distance_line]
+    const footerRight = [
+      text.period_line,
+      text.series_line || text.stakes_line,
+      text.distance_line,
+    ]
       .filter(Boolean)
       .join(" — ");
 
@@ -381,7 +391,7 @@
   ${gridLines.join("\n  ")}
   ${regEls}
   <text x="${px(margin)}" y="${px(margin + 0.046 * w)}" font-family="${DISPLAY}" font-size="${px(headFs)}" fill="${pal.ink}">HALF COURT — PLAN VIEW</text>
-  <text x="${px(margin)}" y="${px(margin + 0.08 * w)}" font-family="${MONO}" font-size="${px(subFs)}" fill="${mark}" letter-spacing="${px(subFs * 0.18)}">${esc(text.stakes_line)} — ${esc(text.cities_line)}</text>
+  <text x="${px(margin)}" y="${px(margin + 0.08 * w)}" font-family="${MONO}" font-size="${px(subFs)}" fill="${mark}" letter-spacing="${px(subFs * 0.18)}">${esc([text.stakes_line, text.series_line, text.cities_line].filter(Boolean).join(" — "))}</text>
   <g fill="none" stroke="${pal.ink}" stroke-width="${px(courtStroke)}" stroke-linejoin="round" stroke-linecap="round">
     <path d="${m.sidelinePath()}"/>
     <path d="${m.halfcourtCirclePath()}"/>
@@ -423,6 +433,7 @@
     const footerFs = 0.0165 * w;
 
     const stack = [[text.clock_value, pal.paper]];
+    if (f.series_game === 7) stack.push(["GAME 7", pal.accent]);
     if (text.deficit_value) stack.push([`DOWN ${text.deficit_value}`, pal.accent]);
     if (f.shot_distance_ft != null && f.shot_distance_ft >= 1)
       stack.push([`FROM ${f.shot_distance_ft.toFixed(0)} FEET`, pal.paper]);
@@ -430,10 +441,15 @@
     else if (f.ties_game) stack.push(["TIES THE GAME", pal.accent2]);
     else stack.push([`${f.points} POINTS`, pal.accent2]);
 
-    const sizes = stack.map(([value]) => fitDisplay(value, cw, 0.175 * h));
-    const natural = sizes.reduce((acc, fs) => acc + fs * 1.04, 0);
+    let sizes = stack.map(([value]) => fitDisplay(value, cw, 0.175 * h));
+    let natural = sizes.reduce((acc, fs) => acc + fs * 1.04, 0);
     const stackTop = 0.07 * h, stackBottom = 0.715 * h;
-    const gapExtra = Math.max(0, stackBottom - stackTop - natural) / Math.max(stack.length, 1);
+    const zone = stackBottom - stackTop;
+    if (natural > zone) {
+      sizes = sizes.map((fs) => (fs * zone) / natural);
+      natural = zone;
+    }
+    const gapExtra = Math.max(0, zone - natural) / Math.max(stack.length, 1);
 
     let cursor = stackTop;
     const lineEls = stack
@@ -457,7 +473,7 @@
   <rect x="0" y="${px(bandTop)}" width="${px(w)}" height="${px(bandH)}" fill="${pal.accent}"/>
   <text x="${px(w / 2)}" y="${px(bandTop + bandH / 2 + bandFs * 0.34)}" font-family="${DISPLAY}" font-size="${px(bandFs)}" fill="${pal.ink}" text-anchor="middle" letter-spacing="${px(bandFs * 0.02)}">${esc(bandText)}</text>
   <text x="${px(margin)}" y="${px(0.945 * h)}" font-family="${MONO}" font-size="${px(footerFs)}" fill="${pal.paper}" opacity="0.7" letter-spacing="${px(footerFs * 0.16)}">${esc(text.date_line)}</text>
-  <text x="${px(w / 2)}" y="${px(0.945 * h)}" font-family="${MONO}" font-size="${px(footerFs)}" fill="${pal.accent2}" text-anchor="middle" letter-spacing="${px(footerFs * 0.16)}">${esc(text.stakes_line)}</text>
+  <text x="${px(w / 2)}" y="${px(0.945 * h)}" font-family="${MONO}" font-size="${px(footerFs)}" fill="${pal.accent2}" text-anchor="middle" letter-spacing="${px(footerFs * 0.16)}">${esc(text.series_line || text.stakes_line)}</text>
   <text x="${px(w - margin)}" y="${px(0.945 * h)}" font-family="${MONO}" font-size="${px(footerFs)}" fill="${pal.paper}" opacity="0.7" text-anchor="end" letter-spacing="${px(footerFs * 0.16)}">${esc(text.period_line)} — ${esc(f.clock)}</text>
 </svg>`;
   }

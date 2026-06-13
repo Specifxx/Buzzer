@@ -20,6 +20,8 @@ class ScoringInputs:
     is_playoff: bool
     deficit_overcome: int  # largest deficit the scoring team faced earlier
     shot_distance_ft: float | None
+    playoff_round: int | None = None  # 1-4, from the game id
+    series_game: int | None = None  # 1-7
 
 
 @dataclass(frozen=True)
@@ -33,6 +35,8 @@ class ScoringWeights:
     distance_30ft: float = 8.0
     distance_25ft: float = 5.0
     closeness_max: float = 5.0
+    round_step: float = 2.0  # per playoff round beyond the first
+    game_seven: float = 8.0
 
 
 DEFAULT_WEIGHTS = ScoringWeights()
@@ -81,6 +85,13 @@ def score_moment(inputs: ScoringInputs, weights: ScoringWeights = DEFAULT_WEIGHT
         score += weights.playoff
     if inputs.period > 4:
         score += weights.overtime
+
+    # Series stakes: deeper rounds and decisive games are more iconic.
+    # Game 7 of round 4 is the biggest stage the sport has.
+    if inputs.playoff_round is not None:
+        score += (inputs.playoff_round - 1) * weights.round_step
+    if inputs.series_game == 7:
+        score += weights.game_seven
 
     # Comebacks only count if this shot actually ties or takes the lead.
     if inputs.takes_lead or inputs.ties_game:

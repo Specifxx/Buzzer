@@ -119,7 +119,7 @@ def _ctx_trajectory(facts: MomentFacts, w: float, h: float) -> dict[str, Any]:
     )
     rings = [
         {"r": cmap.length(ft * 10.0), "tone": ("accent2" if i % 2 else "paper")}
-        for i, ft in enumerate((5, 10, 15, 20, 25, 30, 35))
+        for i, ft in enumerate((10, 20, 30))
     ]
     glow_r = max(shot_ring or 0.0, cmap.length(220.0))
 
@@ -162,7 +162,7 @@ def _ctx_trajectory(facts: MomentFacts, w: float, h: float) -> dict[str, Any]:
                 part
                 for part in (
                     ctx["text"].period_line,
-                    ctx["text"].stakes_line,
+                    ctx["text"].series_line or ctx["text"].stakes_line,
                     ctx["text"].distance_line,
                 )
                 if part
@@ -218,6 +218,15 @@ def _ctx_blueprint(facts: MomentFacts, w: float, h: float) -> dict[str, Any]:
             "grid_ys": [i * grid_step for i in range(1, int(h / grid_step))],
             "head_fs": 0.050 * w,
             "head_y": ctx["margin"] + 0.046 * w,
+            "sub_text": " — ".join(
+                part
+                for part in (
+                    ctx["text"].stakes_line,
+                    ctx["text"].series_line,
+                    ctx["text"].cities_line,
+                )
+                if part
+            ),
             "sub_fs": 0.017 * w,
             "sub_y": ctx["margin"] + 0.080 * w,
             "court_stroke": max(2.0, 0.0028 * w),
@@ -282,6 +291,8 @@ def _ctx_type(facts: MomentFacts, w: float, h: float) -> dict[str, Any]:
     cw = w - 2 * ctx["margin"]
 
     stack: list[tuple[str, str]] = [(text.clock_value, "paper")]
+    if facts.series_game == 7:
+        stack.append(("GAME 7", "accent"))
     if text.deficit_value:
         stack.append((f"DOWN {text.deficit_value}", "accent"))
     if facts.shot_distance_ft is not None and facts.shot_distance_ft >= 1:
@@ -298,7 +309,11 @@ def _ctx_type(facts: MomentFacts, w: float, h: float) -> dict[str, Any]:
     sizes = [_fit_display(value, cw, 0.175 * h) for value, _tone in stack]
     natural = sum(fs * 1.04 for fs in sizes)
     stack_top, stack_bottom = 0.070 * h, 0.715 * h
-    gap_extra = max(0.0, (stack_bottom - stack_top - natural)) / max(len(stack), 1)
+    zone = stack_bottom - stack_top
+    if natural > zone:  # many lines (e.g. Game 7 + comeback): shrink to fit
+        sizes = [fs * zone / natural for fs in sizes]
+        natural = zone
+    gap_extra = max(0.0, zone - natural) / max(len(stack), 1)
     lines = []
     cursor = stack_top
     for (value, tone), fs in zip(stack, sizes, strict=True):
@@ -322,7 +337,7 @@ def _ctx_type(facts: MomentFacts, w: float, h: float) -> dict[str, Any]:
             "footer_y": 0.945 * h,
             "footer_fs": 0.0165 * w,
             "footer_left": text.date_line,
-            "footer_mid": text.stakes_line,
+            "footer_mid": text.series_line or text.stakes_line,
             "footer_right": f"{text.period_line} — {facts.clock}",
         }
     )

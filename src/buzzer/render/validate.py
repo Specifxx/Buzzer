@@ -73,6 +73,7 @@ ALLOWED_WORDS: frozenset[str] = frozenset(
         "CLOCK",
         "TIME",
         "REMAINING",
+        "ROUND",
         "LEFT",
         "BUZZER",
         "FREE",

@@ -27,17 +27,37 @@
 
   /* ---------------- catalogue grid ---------------- */
   let galleryStyle = "trajectory";
-  let galleryFilter = "all";
+  const filter = { type: "all", city: "all", decade: "all", sort: "score", q: "" };
 
   function matchesFilter(entry) {
-    if (galleryFilter === "all") return true;
-    return entry.badges.some((b) => b.startsWith(galleryFilter));
+    if (filter.type === "GAME-7" && !entry.badges.includes("GAME-7")) return false;
+    if (filter.type !== "all" && filter.type !== "GAME-7" &&
+        !entry.badges.some((b) => b.startsWith(filter.type))) return false;
+    if (filter.city !== "all" && entry.city !== filter.city) return false;
+    if (filter.decade !== "all" &&
+        Math.floor(entry.year / 10) * 10 !== Number(filter.decade)) return false;
+    if (filter.q) {
+      const haystack = `${entry.title} ${entry.city}`.toLowerCase();
+      if (!haystack.includes(filter.q)) return false;
+    }
+    return true;
   }
+
+  const SORTS = {
+    score: (a, b) => b.score - a.score,
+    new: (a, b) => b.facts.game_date.localeCompare(a.facts.game_date),
+    old: (a, b) => a.facts.game_date.localeCompare(b.facts.game_date),
+    city: (a, b) => (a.city || "").localeCompare(b.city || ""),
+  };
 
   function renderGrid() {
     const grid = $("#grid");
     grid.innerHTML = "";
-    CAT.moments.filter(matchesFilter).forEach((entry) => {
+    const shown = CAT.moments.filter(matchesFilter).sort(SORTS[filter.sort]);
+    const count = $("#result-count");
+    if (count) count.textContent =
+      `${shown.length} of ${CAT.moments.length} moments`;
+    shown.forEach((entry) => {
       const card = document.createElement("div");
       card.className = "card";
       const badges = entry.badges
@@ -64,8 +84,22 @@
   $("#filter-chips").addEventListener("click", (e) => {
     const chip = e.target.closest(".chip");
     if (!chip) return;
-    galleryFilter = chip.dataset.filter;
+    filter.type = chip.dataset.filter;
     $$("#filter-chips .chip").forEach((c) => c.classList.toggle("active", c === chip));
+    renderGrid();
+  });
+  // populate the city dropdown from the catalogue itself
+  {
+    const cities = [...new Set(CAT.moments.map((m) => m.city).filter(Boolean))].sort();
+    $("#f-city").innerHTML =
+      '<option value="all">All cities</option>' +
+      cities.map((c) => `<option>${c}</option>`).join("");
+  }
+  $("#f-city").addEventListener("input", (e) => { filter.city = e.target.value; renderGrid(); });
+  $("#f-decade").addEventListener("input", (e) => { filter.decade = e.target.value; renderGrid(); });
+  $("#f-sort").addEventListener("input", (e) => { filter.sort = e.target.value; renderGrid(); });
+  $("#f-search").addEventListener("input", (e) => {
+    filter.q = e.target.value.trim().toLowerCase();
     renderGrid();
   });
   $("#style-chips").addEventListener("click", (e) => {
@@ -150,6 +184,8 @@
     away_city: "Denver",
     date: "2026-06-04",
     playoffs: true,
+    round: "",
+    seriesGame: "",
   };
 
   function clockString(total) {
@@ -180,11 +216,14 @@
       shot_distance_ft: Math.round(dist * 10) / 10,
       shot_x: state.shot_x,
       shot_y: state.shot_y,
+      playoff_round: state.playoffs && state.round ? Number(state.round) : null,
+      series_game: state.playoffs && state.seriesGame ? Number(state.seriesGame) : null,
     };
   }
 
   function describe(facts) {
     const bits = [];
+    if (facts.series_game === 7) bits.push("GAME 7");
     if (R.parseClock(facts.clock) <= 1 && facts.period >= 4) bits.push("BUZZER");
     if (facts.takes_lead) bits.push("GO-AHEAD");
     else if (facts.ties_game) bits.push("TIES IT");
@@ -288,6 +327,8 @@
   bind("#c-awaycity", (el) => (state.away_city = el.value));
   bind("#c-date", (el) => (state.date = el.value));
   bind("#c-playoffs", (el) => (state.playoffs = el.checked));
+  bind("#c-round", (el) => (state.round = el.value));
+  bind("#c-seriesgame", (el) => (state.seriesGame = el.value));
 
   /* downloads */
   let fontCSSPromise = null;

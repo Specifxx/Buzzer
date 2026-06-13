@@ -51,7 +51,7 @@ def test_daily_drafts_and_notifies(source: CachedSource, tmp_path: Path) -> None
     subject, body = notifier.messages[0]
     assert "await approval" in subject
     assert "buzzer approve --moment 0042500401:350" in body
-    assert "96/100" in body
+    assert "100/100" in body
     assert "NOT published" in body
 
 

@@ -37,6 +37,7 @@ class PosterText:
     cities_line: str  # "DENVER AT BOSTON"
     score_line: str  # "DENVER 100 — BOSTON 101" (away first)
     stakes_line: str  # "PLAYOFFS" / "REGULAR SEASON"
+    series_line: str  # "ROUND 4 — GAME 7" or ""
     story_lines: tuple[str, ...]  # short factual phrases
     distance_line: str  # "27 FT" or ""
     margin_phrase: str  # "BOSTON BY 1" / "TIED 94"
@@ -97,6 +98,11 @@ def poster_text(facts: MomentFacts) -> PosterText:
         cities_line=f"{away} AT {home}",
         score_line=f"{away} {facts.away_score} — {home} {facts.home_score}",
         stakes_line="PLAYOFFS" if facts.is_playoff else "REGULAR SEASON",
+        series_line=(
+            f"ROUND {facts.playoff_round} — GAME {facts.series_game}"
+            if facts.playoff_round is not None and facts.series_game is not None
+            else ""
+        ),
         story_lines=story_lines(facts),
         distance_line=(
             f"{facts.shot_distance_ft:.0f} FT" if facts.shot_distance_ft is not None else ""

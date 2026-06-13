@@ -139,6 +139,8 @@ def make_moment(rng: random.Random) -> tuple[MomentFacts, int]:
     year = rng.randint(1996, 2025)
     month = rng.choices([4, 5, 6], weights=[35, 40, 25])[0]
     home, away = rng.sample(CITIES, 2)
+    playoff_round = rng.choices([1, 2, 3, 4], weights=[38, 26, 20, 16])[0]
+    series_game = rng.choices([1, 2, 3, 4, 5, 6, 7], weights=[10, 11, 12, 13, 13, 15, 26])[0]
 
     facts = MomentFacts(
         game_date=date(year, month, rng.randint(1, 28)).isoformat(),
@@ -158,6 +160,8 @@ def make_moment(rng: random.Random) -> tuple[MomentFacts, int]:
         shot_distance_ft=dist,
         shot_x=x,
         shot_y=y,
+        playoff_round=playoff_round,
+        series_game=series_game,
     )
     score = score_moment(
         ScoringInputs(
@@ -169,6 +173,8 @@ def make_moment(rng: random.Random) -> tuple[MomentFacts, int]:
             is_playoff=True,
             deficit_overcome=facts.deficit_overcome,
             shot_distance_ft=dist,
+            playoff_round=playoff_round,
+            series_game=series_game,
         )
     )
     return facts, score
@@ -176,6 +182,10 @@ def make_moment(rng: random.Random) -> tuple[MomentFacts, int]:
 
 def _badges(facts: MomentFacts) -> list[str]:
     badges = []
+    if facts.series_game == 7:
+        badges.append("GAME-7")
+    if facts.playoff_round == 4:
+        badges.append("ROUND-4")
     if parse_clock(facts.clock) <= 1:
         badges.append("BUZZER")
     if facts.takes_lead:
@@ -226,6 +236,8 @@ def build_site(out_dir: Path, count: int = 36, seed: int = SEED) -> dict[str, An
                 "description": description_for(facts),
                 "tags": tags_for(facts),
                 "badges": _badges(facts),
+                "city": facts.home_city,
+                "year": int(facts.game_date[:4]),
                 "facts": facts.to_dict(),
                 "files": files,
             }

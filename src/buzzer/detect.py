@@ -37,6 +37,15 @@ def _shot_index(shot_rows: list[Row]) -> dict[int, Row]:
     return {int(row["GAME_EVENT_ID"]): row for row in shot_rows}
 
 
+def _series_info(game_id: str) -> tuple[int | None, int | None]:
+    """(round 1-4, game 1-7) decoded from a playoff game id 004YY00RMG."""
+    if game_id.startswith("004") and len(game_id) == 10:
+        round_digit, game_digit = int(game_id[7]), int(game_id[9])
+        if 1 <= round_digit <= 4 and 1 <= game_digit <= 7:
+            return round_digit, game_digit
+    return None, None
+
+
 def _moment_for_event(
     event: PlayEvent,
     game: GameInfo,
@@ -51,6 +60,7 @@ def _moment_for_event(
         team_after, opp_after = event.away_score, event.home_score
     margin_after = team_after - opp_after
     margin_before = margin_after - event.points
+    playoff_round, series_game = _series_info(game.game_id)
 
     facts = MomentFacts(
         game_date=game.game_date,
@@ -70,6 +80,8 @@ def _moment_for_event(
         shot_distance_ft=float(shot["SHOT_DISTANCE"]) if shot else None,
         shot_x=float(shot["LOC_X"]) if shot else None,
         shot_y=float(shot["LOC_Y"]) if shot else None,
+        playoff_round=playoff_round,
+        series_game=series_game,
     )
     score = score_moment(
         ScoringInputs(
@@ -81,6 +93,8 @@ def _moment_for_event(
             is_playoff=game.is_playoff,
             deficit_overcome=facts.deficit_overcome,
             shot_distance_ft=facts.shot_distance_ft,
+            playoff_round=playoff_round,
+            series_game=series_game,
         )
     )
     context = MomentContext(
