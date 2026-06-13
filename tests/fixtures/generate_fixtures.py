@@ -121,7 +121,7 @@ class GameBuilder:
                 "MINUTES_REMAINING": minutes,
                 "SECONDS_REMAINING": seconds,
                 "EVENT_TYPE": "Made Shot" if made else "Missed Shot",
-                "ACTION_TYPE": "Jump Shot",
+                "ACTION_TYPE": "Tip Layup Shot" if made and dist <= 3 else "Jump Shot",
                 "SHOT_TYPE": "3PT Field Goal" if is_three else "2PT Field Goal",
                 "SHOT_ZONE_BASIC": "Above the Break 3" if is_three else "Mid-Range",
                 "SHOT_DISTANCE": dist,
@@ -347,7 +347,7 @@ FINALS_Q4: list[Play] = [
     ("2:20", "A", 2, None),
     ("1:40", "H", 0, None),
     ("1:05", "A", 1, None),
-    ("0:33", "H", 2, None),
+    ("0:33", "H", 2, 2),  # tip-in putback
     ("0:19", "A", 0, 26),
     ("0:01", "H", 3, 27),  # the moment: go-ahead 27-footer, one second left
 ]

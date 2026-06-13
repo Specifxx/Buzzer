@@ -61,6 +61,8 @@ def _moment_for_event(
     margin_after = team_after - opp_after
     margin_before = margin_after - event.points
     playoff_round, series_game = _series_info(game.game_id)
+    action = str(shot.get("ACTION_TYPE", "")).lower() if shot else ""
+    is_tip = "tip" in action or "putback" in action
 
     facts = MomentFacts(
         game_date=game.game_date,
@@ -82,6 +84,7 @@ def _moment_for_event(
         shot_y=float(shot["LOC_Y"]) if shot else None,
         playoff_round=playoff_round,
         series_game=series_game,
+        is_tip=is_tip,
     )
     score = score_moment(
         ScoringInputs(
@@ -95,6 +98,7 @@ def _moment_for_event(
             shot_distance_ft=facts.shot_distance_ft,
             playoff_round=playoff_round,
             series_game=series_game,
+            is_tip=is_tip,
         )
     )
     context = MomentContext(

@@ -186,6 +186,7 @@
     playoffs: true,
     round: "",
     seriesGame: "",
+    isTip: false,
   };
 
   function clockString(total) {
@@ -218,12 +219,14 @@
       shot_y: state.shot_y,
       playoff_round: state.playoffs && state.round ? Number(state.round) : null,
       series_game: state.playoffs && state.seriesGame ? Number(state.seriesGame) : null,
+      is_tip: state.isTip,
     };
   }
 
   function describe(facts) {
     const bits = [];
     if (facts.series_game === 7) bits.push("GAME 7");
+    if (facts.is_tip) bits.push("TIP-IN");
     if (R.parseClock(facts.clock) <= 1 && facts.period >= 4) bits.push("BUZZER");
     if (facts.takes_lead) bits.push("GO-AHEAD");
     else if (facts.ties_game) bits.push("TIES IT");
@@ -329,6 +332,7 @@
   bind("#c-playoffs", (el) => (state.playoffs = el.checked));
   bind("#c-round", (el) => (state.round = el.value));
   bind("#c-seriesgame", (el) => (state.seriesGame = el.value));
+  bind("#c-tip", (el) => (state.isTip = el.checked));
 
   /* downloads */
   let fontCSSPromise = null;

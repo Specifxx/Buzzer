@@ -66,6 +66,15 @@ def test_series_stakes_raise_the_score() -> None:
     assert score_moment(finals_g7) == score_moment(base) + 6 + 8  # round depth + game 7
 
 
+def test_tip_in_chaos_bonus_only_in_final_seconds() -> None:
+    base = replace(BUZZER_BEATER, shot_distance_ft=2.0, deficit_overcome=0)
+    tip = replace(base, is_tip=True)  # at 0:01 -> chaos bonus
+    assert score_moment(tip) == score_moment(base) + 4
+    early_tip = replace(tip, seconds_remaining=33.0)
+    early = replace(base, seconds_remaining=33.0)
+    assert score_moment(early_tip) == score_moment(early)  # no bonus at 0:33
+
+
 def test_score_is_clamped_to_0_100() -> None:
     maxed = replace(
         BUZZER_BEATER, seconds_remaining=0.0, deficit_overcome=30, shot_distance_ft=35.0

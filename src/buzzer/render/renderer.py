@@ -90,6 +90,22 @@ def _fit_display(text_value: str, max_width: float, cap: float) -> float:
     return min(cap, max_width / (ANTON_GLYPH_W * max(len(text_value), 2)))
 
 
+def _ball_geometry(cx: float, cy: float, r: float) -> dict[str, Any]:
+    """Stylised basketball: circle, cross seams, two bowed side seams.
+
+    A generic ball drawing is plain sports imagery — no marks involved.
+    """
+    return {
+        "cx": cx,
+        "cy": cy,
+        "r": r,
+        "seam_left": f"M {cx:.1f} {cy - r:.1f} Q {cx - 1.15 * r:.1f} {cy:.1f} "
+        f"{cx:.1f} {cy + r:.1f}",
+        "seam_right": f"M {cx:.1f} {cy - r:.1f} Q {cx + 1.15 * r:.1f} {cy:.1f} "
+        f"{cx:.1f} {cy + r:.1f}",
+    }
+
+
 # --- style: trajectory ------------------------------------------------------
 
 
@@ -148,6 +164,7 @@ def _ctx_trajectory(facts: MomentFacts, w: float, h: float) -> dict[str, Any]:
             "shot_x": px,
             "shot_y": py,
             "dot_r": 0.015 * w,
+            "ball": _ball_geometry(px, py, 0.0205 * w),
             "rule_y": rule_y,
             "clock_fs": clock_fs,
             "clock_y": rule_y + 0.018 * h + clock_fs * 0.80,
@@ -256,6 +273,8 @@ def _ctx_blueprint(facts: MomentFacts, w: float, h: float) -> dict[str, Any]:
             "coord_label": f"X {sx / 10.0:+.1f} FT — Y {sy / 10.0:+.1f} FT",
             "coord_x": min(max(px, 0.17 * w), 0.83 * w),
             "coord_y": py - 0.026 * w,
+            "ball": _ball_geometry(cmap.x(160.0), cmap.y(345.0), 0.038 * w),
+            "ball_label_y": cmap.y(345.0) + 0.038 * w + 0.024 * w,
             "court_w_label_y": cmap.y(court.BASELINE_Y) + 0.030 * h,
             "court_left_x": cmap.x(-court.COURT_HALF_WIDTH),
             "court_right_x": cmap.x(court.COURT_HALF_WIDTH),
@@ -267,6 +286,12 @@ def _ctx_blueprint(facts: MomentFacts, w: float, h: float) -> dict[str, Any]:
                     "value": value,
                     "x": ctx["margin"] + (i % 3) * ((w - 2 * ctx["margin"]) / 3),
                     "y": block_top + (i // 3) * (block_h / 2),
+                    # Space Grotesk 700 averages ~0.62em per glyph; long
+                    # city pairs must not bleed into the next cell.
+                    "fs": min(
+                        0.0155 * w,
+                        ((w - 2 * ctx["margin"]) / 3 - 0.035 * w) / (0.66 * max(len(value), 4)),
+                    ),
                 }
                 for i, (label, value) in enumerate(cells)
             ],
@@ -295,7 +320,9 @@ def _ctx_type(facts: MomentFacts, w: float, h: float) -> dict[str, Any]:
         stack.append(("GAME 7", "accent"))
     if text.deficit_value:
         stack.append((f"DOWN {text.deficit_value}", "accent"))
-    if facts.shot_distance_ft is not None and facts.shot_distance_ft >= 1:
+    if facts.is_tip:
+        stack.append(("TIP-IN", "paper"))
+    elif facts.shot_distance_ft is not None and facts.shot_distance_ft >= 1:
         stack.append((f"FROM {facts.shot_distance_ft:.0f} FEET", "paper"))
     if facts.takes_lead:
         stack.append(("FOR THE LEAD", "accent2"))
@@ -334,6 +361,7 @@ def _ctx_type(facts: MomentFacts, w: float, h: float) -> dict[str, Any]:
             "band_text": band_text,
             "band_fs": band_fs,
             "band_text_y": band_top + band_h / 2 + band_fs * 0.34,
+            "ball": _ball_geometry(w / 2.0, (band_top + band_h + 0.915 * h) / 2.0, 0.030 * w),
             "footer_y": 0.945 * h,
             "footer_fs": 0.0165 * w,
             "footer_left": text.date_line,

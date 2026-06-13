@@ -146,8 +146,11 @@
       cities_line: `${away} AT ${home}`,
       score_line: `${away} ${f.away_score} — ${home} ${f.home_score}`,
       stakes_line: f.is_playoff ? "PLAYOFFS" : "REGULAR SEASON",
-      distance_line:
-        f.shot_distance_ft != null ? `${f.shot_distance_ft.toFixed(0)} FT` : "",
+      distance_line: f.is_tip
+        ? "TIP-IN"
+        : f.shot_distance_ft != null
+          ? `${f.shot_distance_ft.toFixed(0)} FT`
+          : "",
       series_line:
         f.playoff_round != null && f.series_game != null
           ? `ROUND ${f.playoff_round} — GAME ${f.series_game}`
@@ -198,6 +201,7 @@
     }
     if (f.playoff_round != null) score += (f.playoff_round - 1) * 2;
     if (f.series_game === 7) score += 8;
+    if (f.is_tip && f.period >= 4 && t <= 5) score += 4;
     return Math.max(0, Math.min(100, Math.round(score)));
   }
 
@@ -210,6 +214,18 @@
 
   function fitDisplay(text, maxWidth, cap) {
     return Math.min(cap, maxWidth / (ANTON_GLYPH_W * Math.max(text.length, 2)));
+  }
+
+  function ballSVG(cx, cy, r, stroke, width, fill) {
+    const seamL = `M ${px(cx)} ${px(cy - r)} Q ${px(cx - 1.15 * r)} ${px(cy)} ${px(cx)} ${px(cy + r)}`;
+    const seamR = `M ${px(cx)} ${px(cy - r)} Q ${px(cx + 1.15 * r)} ${px(cy)} ${px(cx)} ${px(cy + r)}`;
+    const fillEl = fill ? `<circle cx="${px(cx)}" cy="${px(cy)}" r="${px(r)}" fill="${fill}"/>` : "";
+    return `${fillEl}<g fill="none" stroke="${stroke}" stroke-width="${px(width)}">
+      <circle cx="${px(cx)}" cy="${px(cy)}" r="${px(r)}"/>
+      <line x1="${px(cx - r)}" y1="${px(cy)}" x2="${px(cx + r)}" y2="${px(cy)}"/>
+      <line x1="${px(cx)}" y1="${px(cy - r)}" x2="${px(cx)}" y2="${px(cy + r)}"/>
+      <path d="${seamL}"/><path d="${seamR}"/>
+    </g>`;
   }
 
   function shotCourtXY(f) {
@@ -298,8 +314,8 @@
     <path d="${arcPath(0.45)}" fill="none" stroke="${pal.paper}" stroke-width="${px(0.0085 * w)}" stroke-linecap="round"/>
     <line x1="${px(bb[0])}" y1="${px(bb[1])}" x2="${px(bb[2])}" y2="${px(bb[3])}" stroke="${pal.paper}" stroke-width="${px(hair * 2.4)}"/>
     <circle cx="${px(hoopX)}" cy="${px(hoopY)}" r="${px(m.length(COURT.HOOP_RADIUS))}" fill="none" stroke="${pal.paper}" stroke-width="${px(hair * 2)}"/>
-    <circle cx="${px(pxx)}" cy="${px(pyy)}" r="${px(0.015 * w * 1.9)}" fill="none" stroke="${pal.accent2}" stroke-width="${px(hair)}" opacity="0.8"/>
-    <circle cx="${px(pxx)}" cy="${px(pyy)}" r="${px(0.015 * w)}" fill="${pal.accent2}" stroke="${pal.ink}" stroke-width="${px(hair)}"/>
+    <circle cx="${px(pxx)}" cy="${px(pyy)}" r="${px(0.0205 * w * 1.55)}" fill="none" stroke="${pal.accent2}" stroke-width="${px(hair)}" opacity="0.8"/>
+    ${ballSVG(pxx, pyy, 0.0205 * w, pal.ink, hair * 1.1, pal.accent2)}
   </g>
   <line x1="${px(margin)}" y1="${px(ruleY)}" x2="${px(w - margin)}" y2="${px(ruleY)}" stroke="${pal.accent}" stroke-width="${px(hair * 3)}"/>
   <text x="${px(margin)}" y="${px(ruleY + 0.018 * h + clockFs * 0.8)}" font-family="${DISPLAY}" font-size="${px(clockFs)}" fill="${pal.paper}">${esc(text.clock_line)}</text>
@@ -381,8 +397,9 @@
       .map(([label, value], i) => {
         const cx = margin + (i % 3) * cellW;
         const cy = blockTop + Math.floor(i / 3) * cellH;
+        const fs = Math.min(valueFs, (cellW - 0.035 * w) / (0.66 * Math.max(value.length, 4)));
         return `<text x="${px(cx + labelFs)}" y="${px(cy + cellH * 0.34)}" font-family="${MONO}" font-size="${px(labelFs)}" fill="${pal.ink}" opacity="0.55" letter-spacing="${px(labelFs * 0.2)}">${esc(label)}</text>
-    <text x="${px(cx + labelFs)}" y="${px(cy + cellH * 0.72)}" font-family="${SANS}" font-weight="700" font-size="${px(valueFs)}" fill="${pal.ink}">${esc(value)}</text>`;
+    <text x="${px(cx + labelFs)}" y="${px(cy + cellH * 0.72)}" font-family="${SANS}" font-weight="700" font-size="${px(fs)}" fill="${pal.ink}">${esc(value)}</text>`;
       })
       .join("\n    ");
 
@@ -410,6 +427,8 @@
   <circle cx="${px(pxx)}" cy="${px(pyy)}" r="${px(cross * 0.62)}" fill="none" stroke="${mark}" stroke-width="${px(hair)}"/>
   <text x="${px(coordX)}" y="${px(pyy - 0.026 * w)}" font-family="${MONO}" font-size="${px(monoFs)}" fill="${mark}" text-anchor="middle">${esc(coordLabel)}</text>
   <text x="${px((pxx + hx) / 2 + 0.03 * w)}" y="${px((pyy + hy) / 2)}" font-family="${MONO}" font-weight="700" font-size="${px(monoFs * 1.35)}" fill="${mark}">${esc(dimLabel)}</text>
+  ${ballSVG(m.x(160), m.y(345), 0.038 * w, pal.ink, hair * 1.1, null)}
+  <text x="${px(m.x(160))}" y="${px(m.y(345) + 0.038 * w + 0.024 * w)}" font-family="${MONO}" font-size="${px(monoFs * 0.9)}" fill="${pal.ink}" opacity="0.7" text-anchor="middle" letter-spacing="${px(monoFs * 0.1)}">DETAIL — BALL 9.4 IN</text>
   <line x1="${px(cl)}" y1="${px(cwY)}" x2="${px(cr)}" y2="${px(cwY)}" stroke="${pal.ink}" stroke-width="${px(hair * 0.8)}"/>
   <line x1="${px(cl)}" y1="${px(cwY - hair * 5)}" x2="${px(cl)}" y2="${px(cwY + hair * 5)}" stroke="${pal.ink}" stroke-width="${px(hair * 0.8)}"/>
   <line x1="${px(cr)}" y1="${px(cwY - hair * 5)}" x2="${px(cr)}" y2="${px(cwY + hair * 5)}" stroke="${pal.ink}" stroke-width="${px(hair * 0.8)}"/>
@@ -435,7 +454,8 @@
     const stack = [[text.clock_value, pal.paper]];
     if (f.series_game === 7) stack.push(["GAME 7", pal.accent]);
     if (text.deficit_value) stack.push([`DOWN ${text.deficit_value}`, pal.accent]);
-    if (f.shot_distance_ft != null && f.shot_distance_ft >= 1)
+    if (f.is_tip) stack.push(["TIP-IN", pal.paper]);
+    else if (f.shot_distance_ft != null && f.shot_distance_ft >= 1)
       stack.push([`FROM ${f.shot_distance_ft.toFixed(0)} FEET`, pal.paper]);
     if (f.takes_lead) stack.push(["FOR THE LEAD", pal.accent2]);
     else if (f.ties_game) stack.push(["TIES THE GAME", pal.accent2]);
@@ -472,6 +492,7 @@
   ${lineEls}
   <rect x="0" y="${px(bandTop)}" width="${px(w)}" height="${px(bandH)}" fill="${pal.accent}"/>
   <text x="${px(w / 2)}" y="${px(bandTop + bandH / 2 + bandFs * 0.34)}" font-family="${DISPLAY}" font-size="${px(bandFs)}" fill="${pal.ink}" text-anchor="middle" letter-spacing="${px(bandFs * 0.02)}">${esc(bandText)}</text>
+  ${ballSVG(w / 2, (bandTop + bandH + 0.915 * h) / 2, 0.030 * w, pal.paper, Math.max(1.5, 0.0016 * w) * 1.4, null)}
   <text x="${px(margin)}" y="${px(0.945 * h)}" font-family="${MONO}" font-size="${px(footerFs)}" fill="${pal.paper}" opacity="0.7" letter-spacing="${px(footerFs * 0.16)}">${esc(text.date_line)}</text>
   <text x="${px(w / 2)}" y="${px(0.945 * h)}" font-family="${MONO}" font-size="${px(footerFs)}" fill="${pal.accent2}" text-anchor="middle" letter-spacing="${px(footerFs * 0.16)}">${esc(text.series_line || text.stakes_line)}</text>
   <text x="${px(w - margin)}" y="${px(0.945 * h)}" font-family="${MONO}" font-size="${px(footerFs)}" fill="${pal.paper}" opacity="0.7" text-anchor="end" letter-spacing="${px(footerFs * 0.16)}">${esc(text.period_line)} — ${esc(f.clock)}</text>

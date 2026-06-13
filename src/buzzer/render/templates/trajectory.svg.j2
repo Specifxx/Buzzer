@@ -39,10 +39,18 @@
           stroke="{{ paper }}" stroke-width="{{ (hairline*2.4)|px }}"/>
     <circle cx="{{ hoop_x|px }}" cy="{{ hoop_y|px }}" r="{{ hoop_r|px }}" fill="none"
             stroke="{{ paper }}" stroke-width="{{ (hairline*2)|px }}"/>
-    <circle cx="{{ shot_x|px }}" cy="{{ shot_y|px }}" r="{{ (dot_r*1.9)|px }}" fill="none"
+    <circle cx="{{ ball.cx|px }}" cy="{{ ball.cy|px }}" r="{{ (ball.r*1.55)|px }}" fill="none"
             stroke="{{ accent2 }}" stroke-width="{{ hairline|px }}" opacity="0.8"/>
-    <circle cx="{{ shot_x|px }}" cy="{{ shot_y|px }}" r="{{ dot_r|px }}" fill="{{ accent2 }}"
-            stroke="{{ ink }}" stroke-width="{{ hairline|px }}"/>
+    <g>
+      <circle cx="{{ ball.cx|px }}" cy="{{ ball.cy|px }}" r="{{ ball.r|px }}" fill="{{ accent2 }}"/>
+      <g fill="none" stroke="{{ ink }}" stroke-width="{{ (hairline*1.1)|px }}">
+        <circle cx="{{ ball.cx|px }}" cy="{{ ball.cy|px }}" r="{{ ball.r|px }}"/>
+        <line x1="{{ (ball.cx - ball.r)|px }}" y1="{{ ball.cy|px }}" x2="{{ (ball.cx + ball.r)|px }}" y2="{{ ball.cy|px }}"/>
+        <line x1="{{ ball.cx|px }}" y1="{{ (ball.cy - ball.r)|px }}" x2="{{ ball.cx|px }}" y2="{{ (ball.cy + ball.r)|px }}"/>
+        <path d="{{ ball.seam_left }}"/>
+        <path d="{{ ball.seam_right }}"/>
+      </g>
+    </g>
   </g>
 
   <line x1="{{ margin|px }}" y1="{{ rule_y|px }}" x2="{{ (w - margin)|px }}" y2="{{ rule_y|px }}"

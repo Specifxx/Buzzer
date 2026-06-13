@@ -44,6 +44,15 @@ def test_min_score_filters(source: CachedSource) -> None:
     assert any(m.facts.ties_game for m in moments)
 
 
+def test_tip_in_detected_from_action_type(source: CachedSource) -> None:
+    moments = detect_moments(FINALS_GAME, source=source, min_score=0)
+    tip = next(m for m in moments if m.facts.clock == "0:33" and m.facts.period == 4)
+    assert tip.facts.is_tip
+    assert tip.facts.shot_distance_ft == 2.0
+    # and the buzzer-beater three is NOT a tip
+    assert not moments[0].facts.is_tip
+
+
 def test_quiet_game_has_no_moments(source: CachedSource) -> None:
     assert detect_moments(QUIET_GAME, source=source) == []
 

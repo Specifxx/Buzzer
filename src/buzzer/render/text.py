@@ -105,7 +105,9 @@ def poster_text(facts: MomentFacts) -> PosterText:
         ),
         story_lines=story_lines(facts),
         distance_line=(
-            f"{facts.shot_distance_ft:.0f} FT" if facts.shot_distance_ft is not None else ""
+            "TIP-IN"
+            if facts.is_tip
+            else (f"{facts.shot_distance_ft:.0f} FT" if facts.shot_distance_ft is not None else "")
         ),
         margin_phrase=margin_phrase(facts),
         deficit_value=(

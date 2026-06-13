@@ -13,6 +13,14 @@
         font-size="{{ band_fs|px }}" fill="{{ ink }}" text-anchor="middle"
         letter-spacing="{{ (band_fs*0.02)|px }}">{{ band_text }}</text>
 
+  <g fill="none" stroke="{{ paper }}" stroke-width="{{ (hairline*1.4)|px }}" opacity="0.9">
+    <circle cx="{{ ball.cx|px }}" cy="{{ ball.cy|px }}" r="{{ ball.r|px }}"/>
+    <line x1="{{ (ball.cx - ball.r)|px }}" y1="{{ ball.cy|px }}" x2="{{ (ball.cx + ball.r)|px }}" y2="{{ ball.cy|px }}"/>
+    <line x1="{{ ball.cx|px }}" y1="{{ (ball.cy - ball.r)|px }}" x2="{{ ball.cx|px }}" y2="{{ (ball.cy + ball.r)|px }}"/>
+    <path d="{{ ball.seam_left }}"/>
+    <path d="{{ ball.seam_right }}"/>
+  </g>
+
   <text x="{{ margin|px }}" y="{{ footer_y|px }}" font-family="{{ mono }}"
         font-size="{{ footer_fs|px }}" fill="{{ paper }}" opacity="0.7"
         letter-spacing="{{ (footer_fs*0.16)|px }}">{{ footer_left }}</text>

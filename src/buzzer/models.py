@@ -78,6 +78,9 @@ class MomentFacts:
     # trigger a factual poster can carry.
     playoff_round: int | None = None
     series_game: int | None = None
+    # Putbacks/tip-ins (from the shot chart's action type). A buzzer
+    # tip-in is its own genre of moment and deserves its own language.
+    is_tip: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

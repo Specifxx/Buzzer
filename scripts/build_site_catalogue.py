@@ -123,7 +123,15 @@ def make_moment(rng: random.Random) -> tuple[MomentFacts, int]:
     period = rng.choices([4, 5, 6], weights=[72, 20, 8])[0]
     clock = _clock_string(rng)
     points = 3 if rng.random() < 0.62 else 2
-    dist, x, y = _shot(rng, points, clock)
+    is_tip = points == 2 and rng.random() < 0.22
+    if is_tip:  # putbacks happen at the rim
+        dist, x, y = (
+            round(rng.uniform(0.5, 2.5), 1),
+            round(rng.uniform(-15, 15), 1),
+            round(rng.uniform(2, 20), 1),
+        )
+    else:
+        dist, x, y = _shot(rng, points, clock)
     margin_before, takes_lead, ties = _margins(rng, points)
     margin_after = margin_before + points
 
@@ -162,6 +170,7 @@ def make_moment(rng: random.Random) -> tuple[MomentFacts, int]:
         shot_y=y,
         playoff_round=playoff_round,
         series_game=series_game,
+        is_tip=is_tip,
     )
     score = score_moment(
         ScoringInputs(
@@ -175,6 +184,7 @@ def make_moment(rng: random.Random) -> tuple[MomentFacts, int]:
             shot_distance_ft=dist,
             playoff_round=playoff_round,
             series_game=series_game,
+            is_tip=is_tip,
         )
     )
     return facts, score
@@ -184,6 +194,8 @@ def _badges(facts: MomentFacts) -> list[str]:
     badges = []
     if facts.series_game == 7:
         badges.append("GAME-7")
+    if facts.is_tip:
+        badges.append("TIP-IN")
     if facts.playoff_round == 4:
         badges.append("ROUND-4")
     if parse_clock(facts.clock) <= 1:

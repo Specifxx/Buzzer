@@ -21,7 +21,11 @@ def _is_buzzer(facts: MomentFacts) -> bool:
 
 
 def title_for(facts: MomentFacts) -> str:
-    if facts.takes_lead and _is_buzzer(facts):
+    if facts.is_tip and _is_buzzer(facts):
+        base = "The Tip-In at the Buzzer"
+    elif facts.is_tip and facts.takes_lead:
+        base = "The Go-Ahead Tip-In"
+    elif facts.takes_lead and _is_buzzer(facts):
         base = "Buzzer-Beater"
     elif facts.takes_lead:
         base = "The Go-Ahead Shot"
@@ -30,7 +34,7 @@ def title_for(facts: MomentFacts) -> str:
     else:
         base = f"A {facts.points}-Point Shot"
 
-    if facts.shot_distance_ft is not None and facts.shot_distance_ft >= 25:
+    if not facts.is_tip and facts.shot_distance_ft is not None and facts.shot_distance_ft >= 25:
         base += f" From {facts.shot_distance_ft:.0f} Feet"
 
     if facts.deficit_overcome >= 8 and (facts.takes_lead or facts.ties_game):
@@ -47,7 +51,9 @@ def title_for(facts: MomentFacts) -> str:
 def description_for(facts: MomentFacts) -> str:
     parts = [f"{period_display(facts.period)}, {facts.clock} remaining."]
 
-    if facts.shot_distance_ft is not None and facts.shot_distance_ft >= 1:
+    if facts.is_tip:
+        shot = "A tip-in"
+    elif facts.shot_distance_ft is not None and facts.shot_distance_ft >= 1:
         shot = f"A {facts.shot_distance_ft:.0f}-foot shot"
     else:
         shot = f"A {facts.points}-point shot"

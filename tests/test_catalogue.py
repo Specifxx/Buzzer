@@ -43,6 +43,13 @@ def test_title_variants() -> None:
     assert "3-Point Shot" in plain
 
 
+def test_tip_in_listing_language() -> None:
+    tip = make_facts(is_tip=True, shot_distance_ft=2.0, shot_x=5.0, shot_y=15.0, clock="0:00")
+    assert title_for(tip).startswith("Game 7: ") is False  # no series in make_facts
+    assert "Tip-In at the Buzzer" in title_for(tip)
+    assert "A tip-in" in description_for(tip)
+
+
 def test_description_is_factual_and_validated() -> None:
     description = description_for(make_facts())
     assert "Q4, 0:01 remaining." in description

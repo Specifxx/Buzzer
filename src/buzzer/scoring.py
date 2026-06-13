@@ -22,6 +22,7 @@ class ScoringInputs:
     shot_distance_ft: float | None
     playoff_round: int | None = None  # 1-4, from the game id
     series_game: int | None = None  # 1-7
+    is_tip: bool = False  # putback/tip-in (shot chart action type)
 
 
 @dataclass(frozen=True)
@@ -37,6 +38,7 @@ class ScoringWeights:
     closeness_max: float = 5.0
     round_step: float = 2.0  # per playoff round beyond the first
     game_seven: float = 8.0
+    tip_chaos: float = 4.0  # last-seconds putback scramble
 
 
 DEFAULT_WEIGHTS = ScoringWeights()
@@ -92,6 +94,8 @@ def score_moment(inputs: ScoringInputs, weights: ScoringWeights = DEFAULT_WEIGHT
         score += (inputs.playoff_round - 1) * weights.round_step
     if inputs.series_game == 7:
         score += weights.game_seven
+    if inputs.is_tip and inputs.period >= 4 and inputs.seconds_remaining <= 5:
+        score += weights.tip_chaos
 
     # Comebacks only count if this shot actually ties or takes the lead.
     if inputs.takes_lead or inputs.ties_game:

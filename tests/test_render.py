@@ -70,10 +70,18 @@ def test_variant_facts_render(style: str) -> None:
         make_facts(shot_x=None, shot_y=None, shot_distance_ft=None),
         make_facts(shot_y=550.0, shot_distance_ft=55.0),  # halfcourt heave
         make_facts(home_city=None, away_city=None),  # unknown historic teams
+        make_facts(is_tip=True, shot_distance_ft=2.0, shot_x=5.0, shot_y=15.0),  # tip-in
     ]
     for facts in variants:
         svg = render_svg(facts, style, "18x24")
         assert svg.startswith("<svg")
+
+
+def test_tip_in_gets_its_own_language() -> None:
+    tip = make_facts(is_tip=True, shot_distance_ft=2.0, shot_x=5.0, shot_y=15.0)
+    svg = render_svg(tip, "type", "18x24")
+    assert "TIP-IN" in svg
+    assert "FROM 2 FEET" not in svg
 
 
 def test_unknown_style_or_size_rejected() -> None:

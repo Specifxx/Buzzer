@@ -49,6 +49,7 @@
           <button class="chip" data-filter="GAME-7">Game 7s</button>
           <button class="chip" data-filter="BUZZER">Buzzer beaters</button>
           <button class="chip" data-filter="COMEBACK">Comebacks</button>
+          <button class="chip" data-filter="TIP-IN">Tip-ins</button>
           <button class="chip" data-filter="OT">Overtime</button>
           <button class="chip" data-filter="DEEP">Deep range</button>
         </div>
@@ -125,10 +126,11 @@
           </label>
         </div>
 
-        <div class="control">
+        <div class="control row">
           <label>Deficit overcome <span id="deficit-readout" class="mono">13</span>
             <input type="range" id="c-deficit" min="0" max="24" step="1" value="13" />
           </label>
+          <label class="checkline"><input type="checkbox" id="c-tip" /> Tip-in</label>
         </div>
 
         <div class="control row">
