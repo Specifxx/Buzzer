@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400.0" height="3600.0" viewBox="0 0 2400.0 3600.0">
+  <rect x="0" y="0" width="2400.0" height="3600.0" fill="#10151F"/>
+
+  
+  <text x="180.0" y="781.2" font-family="Anton, Impact, Arial Narrow, sans-serif"
+        font-size="630.0"
+        fill="#E9E4D8"
+        >0:00</text>
+  
+  <text x="180.0" y="1484.5" font-family="Anton, Impact, Arial Narrow, sans-serif"
+        font-size="629.6"
+        fill="#4D9DE0"
+        >GAME 7</text>
+  
+  <text x="180.0" y="1923.2" font-family="Anton, Impact, Arial Narrow, sans-serif"
+        font-size="314.8"
+        fill="#E9E4D8"
+        >FROM 24 FEET</text>
+  
+  <text x="180.0" y="2431.2" font-family="Anton, Impact, Arial Narrow, sans-serif"
+        font-size="472.2"
+        fill="#E15554"
+        >3 POINTS</text>
+  
+
+  <rect x="0" y="2718.0" width="2400.0" height="306.0" fill="#4D9DE0"/>
+  <text x="1200.0" y="2906.5" font-family="Anton, Impact, Arial Narrow, sans-serif"
+        font-size="104.4" fill="#10151F" text-anchor="middle"
+        letter-spacing="2.1">OKLAHOMA CITY 90 — PHILADELPHIA 95</text>
+
+  <g fill="none" stroke="#E9E4D8" stroke-width="5.4" opacity="0.9">
+    <circle cx="1200.0" cy="3159.0" r="72.0"/>
+    <line x1="1128.0" y1="3159.0" x2="1272.0" y2="3159.0"/>
+    <line x1="1200.0" y1="3087.0" x2="1200.0" y2="3231.0"/>
+    <path d="M 1200.0 3087.0 Q 1117.2 3159.0 1200.0 3231.0"/>
+    <path d="M 1200.0 3087.0 Q 1282.8 3159.0 1200.0 3231.0"/>
+  </g>
+
+  <text x="180.0" y="3402.0" font-family="Space Mono, DejaVu Sans Mono, Courier New, monospace"
+        font-size="39.6" fill="#E9E4D8" opacity="0.7"
+        letter-spacing="6.3">MAY 3, 2015</text>
+  <text x="1200.0" y="3402.0" font-family="Space Mono, DejaVu Sans Mono, Courier New, monospace"
+        font-size="39.6" fill="#E15554" text-anchor="middle"
+        letter-spacing="6.3">ROUND 2 — GAME 7</text>
+  <text x="2220.0" y="3402.0" font-family="Space Mono, DejaVu Sans Mono, Courier New, monospace"
+        font-size="39.6" fill="#E9E4D8" opacity="0.7" text-anchor="end"
+        letter-spacing="6.3">OT — 0:00</text>
+</svg>

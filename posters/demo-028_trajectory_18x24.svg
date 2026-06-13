@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800.0" height="2400.0" viewBox="0 0 1800.0 2400.0">
+  <defs>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#E2725B" stop-opacity="0.42"/>
+      <stop offset="62%" stop-color="#E2725B" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#E2725B" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="court-zone">
+      <rect x="0" y="132.0" width="1800.0" height="1632.0"/>
+    </clipPath>
+  </defs>
+  <rect x="0" y="0" width="1800.0" height="2400.0" fill="#2B1D1A"/>
+
+  <g clip-path="url(#court-zone)">
+    <circle cx="900.0" cy="1332.0" r="1024.8" fill="url(#glow)"/>
+    
+    <circle cx="900.0" cy="1332.0" r="309.6" fill="none"
+            stroke="#F4E7D3"
+            stroke-width="2.9"
+            opacity="0.12"/>
+    
+    <circle cx="900.0" cy="1332.0" r="619.2" fill="none"
+            stroke="#9CAD7F"
+            stroke-width="2.9"
+            opacity="0.30"/>
+    
+    <circle cx="900.0" cy="1332.0" r="928.8" fill="none"
+            stroke="#F4E7D3"
+            stroke-width="2.9"
+            opacity="0.12"/>
+    
+    
+    <circle cx="900.0" cy="1332.0" r="1024.8" fill="none"
+            stroke="#E2725B" stroke-width="5.2" opacity="0.85"/>
+    
+    <path d="M 218.9 1494.5 L 218.9 1055.0 A 735.3 735.3 0 0 1 1581.1 1055.0 L 1581.1 1494.5" fill="none" stroke="#F4E7D3" stroke-width="2.9" opacity="0.12"/>
+    <line x1="126.0" y1="1494.5" x2="1674.0" y2="1494.5"
+          stroke="#F4E7D3" stroke-width="2.9" opacity="0.30"/>
+
+    
+    <path d="M 278.9 518.4 Q 589.5 392.9 900.0 1332.0" fill="none"
+          stroke="#E2725B"
+          stroke-width="9.0" opacity="0.55" stroke-linecap="round"/>
+    
+    <path d="M 278.9 518.4 Q 589.5 321.3 900.0 1332.0" fill="none"
+          stroke="#9CAD7F"
+          stroke-width="6.3" opacity="0.35" stroke-linecap="round"/>
+    
+    <path d="M 278.9 518.4 Q 589.5 249.6 900.0 1332.0" fill="none"
+          stroke="#F4E7D3"
+          stroke-width="4.5" opacity="0.16" stroke-linecap="round"/>
+    
+    <path d="M 278.9 518.4 Q 589.5 464.6 900.0 1332.0" fill="none" stroke="#F4E7D3"
+          stroke-width="15.3" stroke-linecap="round"/>
+
+    <line x1="807.1" y1="1370.7" x2="992.9" y2="1370.7"
+          stroke="#F4E7D3" stroke-width="6.9"/>
+    <circle cx="900.0" cy="1332.0" r="23.2" fill="none"
+            stroke="#F4E7D3" stroke-width="5.8"/>
+    <circle cx="278.9" cy="518.4" r="57.2" fill="none"
+            stroke="#9CAD7F" stroke-width="2.9" opacity="0.8"/>
+    <g>
+      <circle cx="278.9" cy="518.4" r="36.9" fill="#9CAD7F"/>
+      <g fill="none" stroke="#2B1D1A" stroke-width="3.2">
+        <circle cx="278.9" cy="518.4" r="36.9"/>
+        <line x1="242.0" y1="518.4" x2="315.8" y2="518.4"/>
+        <line x1="278.9" y1="481.5" x2="278.9" y2="555.3"/>
+        <path d="M 278.9 481.5 Q 236.5 518.4 278.9 555.3"/>
+        <path d="M 278.9 481.5 Q 321.4 518.4 278.9 555.3"/>
+      </g>
+    </g>
+  </g>
+
+  <line x1="135.0" y1="1824.0" x2="1665.0" y2="1824.0"
+        stroke="#E2725B" stroke-width="8.6"/>
+
+  <text x="135.0" y="2155.2" font-family="Anton, Impact, Arial Narrow, sans-serif"
+        font-size="360.0" fill="#F4E7D3">0:10</text>
+
+  <text x="1665.0" y="1948.8" font-family="Space Grotesk, Helvetica, Arial, sans-serif" font-weight="700"
+        font-size="61.2" fill="#F4E7D3" text-anchor="end"
+        letter-spacing="3.1">NEW YORK 114</text>
+  <text x="1665.0" y="2031.6" font-family="Space Grotesk, Helvetica, Arial, sans-serif" font-weight="700"
+        font-size="61.2" fill="#9CAD7F" text-anchor="end"
+        letter-spacing="3.1">WASHINGTON 114</text>
+
+  <text x="135.0" y="2275.2" font-family="Space Mono, DejaVu Sans Mono, Courier New, monospace"
+        font-size="28.8" fill="#F4E7D3" opacity="0.65"
+        letter-spacing="5.2">MAY 5, 2021</text>
+  <text x="1665.0" y="2275.2" font-family="Space Mono, DejaVu Sans Mono, Courier New, monospace"
+        font-size="28.8" fill="#9CAD7F" text-anchor="end"
+        letter-spacing="5.2">OT — ROUND 1 — GAME 4 — 33 FT</text>
+</svg>

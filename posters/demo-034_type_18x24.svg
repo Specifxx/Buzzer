@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800.0" height="2400.0" viewBox="0 0 1800.0 2400.0">
+  <rect x="0" y="0" width="1800.0" height="2400.0" fill="#221C35"/>
+
+  
+  <text x="135.0" y="520.8" font-family="Anton, Impact, Arial Narrow, sans-serif"
+        font-size="420.0"
+        fill="#F2ECDF"
+        >0:40</text>
+  
+  <text x="135.0" y="1009.8" font-family="Anton, Impact, Arial Narrow, sans-serif"
+        font-size="236.1"
+        fill="#F2ECDF"
+        >FROM 27 FEET</text>
+  
+  <text x="135.0" y="1462.1" font-family="Anton, Impact, Arial Narrow, sans-serif"
+        font-size="236.1"
+        fill="#FFB17A"
+        >FOR THE LEAD</text>
+  
+
+  <rect x="0" y="1812.0" width="1800.0" height="204.0" fill="#9B8CFF"/>
+  <text x="900.0" y="1941.4" font-family="Anton, Impact, Arial Narrow, sans-serif"
+        font-size="80.7" fill="#221C35" text-anchor="middle"
+        letter-spacing="1.6">MINNEAPOLIS 116 — NEW ORLEANS 118</text>
+
+  <g fill="none" stroke="#F2ECDF" stroke-width="4.0" opacity="0.9">
+    <circle cx="900.0" cy="2106.0" r="54.0"/>
+    <line x1="846.0" y1="2106.0" x2="954.0" y2="2106.0"/>
+    <line x1="900.0" y1="2052.0" x2="900.0" y2="2160.0"/>
+    <path d="M 900.0 2052.0 Q 837.9 2106.0 900.0 2160.0"/>
+    <path d="M 900.0 2052.0 Q 962.1 2106.0 900.0 2160.0"/>
+  </g>
+
+  <text x="135.0" y="2268.0" font-family="Space Mono, DejaVu Sans Mono, Courier New, monospace"
+        font-size="29.7" fill="#F2ECDF" opacity="0.7"
+        letter-spacing="4.8">MAY 4, 2016</text>
+  <text x="900.0" y="2268.0" font-family="Space Mono, DejaVu Sans Mono, Courier New, monospace"
+        font-size="29.7" fill="#FFB17A" text-anchor="middle"
+        letter-spacing="4.8">ROUND 1 — GAME 3</text>
+  <text x="1665.0" y="2268.0" font-family="Space Mono, DejaVu Sans Mono, Courier New, monospace"
+        font-size="29.7" fill="#F2ECDF" opacity="0.7" text-anchor="end"
+        letter-spacing="4.8">Q4 — 0:40</text>
+</svg>

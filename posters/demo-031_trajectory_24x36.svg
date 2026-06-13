@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400.0" height="3600.0" viewBox="0 0 2400.0 3600.0">
+  <defs>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#4D9DE0" stop-opacity="0.42"/>
+      <stop offset="62%" stop-color="#4D9DE0" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#4D9DE0" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="court-zone">
+      <rect x="0" y="198.0" width="2400.0" height="2448.0"/>
+    </clipPath>
+  </defs>
+  <rect x="0" y="0" width="2400.0" height="3600.0" fill="#10151F"/>
+
+  <g clip-path="url(#court-zone)">
+    <circle cx="1200.0" cy="1998.0" r="1003.1" fill="url(#glow)"/>
+    
+    <circle cx="1200.0" cy="1998.0" r="412.8" fill="none"
+            stroke="#E9E4D8"
+            stroke-width="3.8"
+            opacity="0.12"/>
+    
+    <circle cx="1200.0" cy="1998.0" r="825.6" fill="none"
+            stroke="#E15554"
+            stroke-width="3.8"
+            opacity="0.30"/>
+    
+    <circle cx="1200.0" cy="1998.0" r="1238.4" fill="none"
+            stroke="#E9E4D8"
+            stroke-width="3.8"
+            opacity="0.12"/>
+    
+    
+    <circle cx="1200.0" cy="1998.0" r="1003.1" fill="none"
+            stroke="#4D9DE0" stroke-width="6.9" opacity="0.85"/>
+    
+    <path d="M 291.8 2214.7 L 291.8 1628.6 A 980.4 980.4 0 0 1 2108.2 1628.6 L 2108.2 2214.7" fill="none" stroke="#E9E4D8" stroke-width="3.8" opacity="0.12"/>
+    <line x1="168.0" y1="2214.7" x2="2232.0" y2="2214.7"
+          stroke="#E9E4D8" stroke-width="3.8" opacity="0.30"/>
+
+    
+    <path d="M 618.0 1182.3 Q 909.0 1069.1 1200.0 1998.0" fill="none"
+          stroke="#4D9DE0"
+          stroke-width="12.0" opacity="0.55" stroke-linecap="round"/>
+    
+    <path d="M 618.0 1182.3 Q 909.0 998.9 1200.0 1998.0" fill="none"
+          stroke="#E15554"
+          stroke-width="8.4" opacity="0.35" stroke-linecap="round"/>
+    
+    <path d="M 618.0 1182.3 Q 909.0 928.8 1200.0 1998.0" fill="none"
+          stroke="#E9E4D8"
+          stroke-width="6.0" opacity="0.16" stroke-linecap="round"/>
+    
+    <path d="M 618.0 1182.3 Q 909.0 1139.2 1200.0 1998.0" fill="none" stroke="#E9E4D8"
+          stroke-width="20.4" stroke-linecap="round"/>
+
+    <line x1="1076.2" y1="2049.6" x2="1323.8" y2="2049.6"
+          stroke="#E9E4D8" stroke-width="9.2"/>
+    <circle cx="1200.0" cy="1998.0" r="31.0" fill="none"
+            stroke="#E9E4D8" stroke-width="7.7"/>
+    <circle cx="618.0" cy="1182.3" r="76.3" fill="none"
+            stroke="#E15554" stroke-width="3.8" opacity="0.8"/>
+    <g>
+      <circle cx="618.0" cy="1182.3" r="49.2" fill="#E15554"/>
+      <g fill="none" stroke="#10151F" stroke-width="4.2">
+        <circle cx="618.0" cy="1182.3" r="49.2"/>
+        <line x1="568.8" y1="1182.3" x2="667.2" y2="1182.3"/>
+        <line x1="618.0" y1="1133.1" x2="618.0" y2="1231.5"/>
+        <path d="M 618.0 1133.1 Q 561.4 1182.3 618.0 1231.5"/>
+        <path d="M 618.0 1133.1 Q 674.5 1182.3 618.0 1231.5"/>
+      </g>
+    </g>
+  </g>
+
+  <line x1="180.0" y1="2736.0" x2="2220.0" y2="2736.0"
+        stroke="#4D9DE0" stroke-width="11.5"/>
+
+  <text x="180.0" y="3184.8" font-family="Anton, Impact, Arial Narrow, sans-serif"
+        font-size="480.0" fill="#E9E4D8">0:00</text>
+
+  <text x="2220.0" y="2923.2" font-family="Space Grotesk, Helvetica, Arial, sans-serif" font-weight="700"
+        font-size="81.6" fill="#E9E4D8" text-anchor="end"
+        letter-spacing="4.1">OKLAHOMA CITY 90</text>
+  <text x="2220.0" y="3033.6" font-family="Space Grotesk, Helvetica, Arial, sans-serif" font-weight="700"
+        font-size="81.6" fill="#E15554" text-anchor="end"
+        letter-spacing="4.1">PHILADELPHIA 95</text>
+
+  <text x="180.0" y="3412.8" font-family="Space Mono, DejaVu Sans Mono, Courier New, monospace"
+        font-size="38.4" fill="#E9E4D8" opacity="0.65"
+        letter-spacing="6.9">MAY 3, 2015</text>
+  <text x="2220.0" y="3412.8" font-family="Space Mono, DejaVu Sans Mono, Courier New, monospace"
+        font-size="38.4" fill="#E15554" text-anchor="end"
+        letter-spacing="6.9">OT — ROUND 2 — GAME 7 — 24 FT</text>
+</svg>

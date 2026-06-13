@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800.0" height="2400.0" viewBox="0 0 1800.0 2400.0">
+  <rect x="0" y="0" width="1800.0" height="2400.0" fill="#0E2430"/>
+
+  
+  <text x="135.0" y="520.8" font-family="Anton, Impact, Arial Narrow, sans-serif"
+        font-size="420.0"
+        fill="#EDE9DC"
+        >0:28</text>
+  
+  <text x="135.0" y="989.0" font-family="Anton, Impact, Arial Narrow, sans-serif"
+        font-size="404.8"
+        fill="#5FC8BA"
+        >DOWN 21</text>
+  
+  <text x="135.0" y="1330.5" font-family="Anton, Impact, Arial Narrow, sans-serif"
+        font-size="257.6"
+        fill="#EDE9DC"
+        >FROM 2 FEET</text>
+  
+  <text x="135.0" y="1624.6" font-family="Anton, Impact, Arial Narrow, sans-serif"
+        font-size="236.1"
+        fill="#F2B33D"
+        >FOR THE LEAD</text>
+  
+
+  <rect x="0" y="1812.0" width="1800.0" height="204.0" fill="#5FC8BA"/>
+  <text x="900.0" y="1950.2" font-family="Anton, Impact, Arial Narrow, sans-serif"
+        font-size="106.5" fill="#0E2430" text-anchor="middle"
+        letter-spacing="2.1">PHOENIX 122 — DETROIT 121</text>
+
+  <g fill="none" stroke="#EDE9DC" stroke-width="4.0" opacity="0.9">
+    <circle cx="900.0" cy="2106.0" r="54.0"/>
+    <line x1="846.0" y1="2106.0" x2="954.0" y2="2106.0"/>
+    <line x1="900.0" y1="2052.0" x2="900.0" y2="2160.0"/>
+    <path d="M 900.0 2052.0 Q 837.9 2106.0 900.0 2160.0"/>
+    <path d="M 900.0 2052.0 Q 962.1 2106.0 900.0 2160.0"/>
+  </g>
+
+  <text x="135.0" y="2268.0" font-family="Space Mono, DejaVu Sans Mono, Courier New, monospace"
+        font-size="29.7" fill="#EDE9DC" opacity="0.7"
+        letter-spacing="4.8">MAY 14, 2021</text>
+  <text x="900.0" y="2268.0" font-family="Space Mono, DejaVu Sans Mono, Courier New, monospace"
+        font-size="29.7" fill="#F2B33D" text-anchor="middle"
+        letter-spacing="4.8">ROUND 1 — GAME 4</text>
+  <text x="1665.0" y="2268.0" font-family="Space Mono, DejaVu Sans Mono, Courier New, monospace"
+        font-size="29.7" fill="#EDE9DC" opacity="0.7" text-anchor="end"
+        letter-spacing="4.8">Q4 — 0:28</text>
+</svg>

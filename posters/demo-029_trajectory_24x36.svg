@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400.0" height="3600.0" viewBox="0 0 2400.0 3600.0">
+  <defs>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#FF6B4A" stop-opacity="0.42"/>
+      <stop offset="62%" stop-color="#FF6B4A" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#FF6B4A" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="court-zone">
+      <rect x="0" y="198.0" width="2400.0" height="2448.0"/>
+    </clipPath>
+  </defs>
+  <rect x="0" y="0" width="2400.0" height="3600.0" fill="#1A1B26"/>
+
+  <g clip-path="url(#court-zone)">
+    <circle cx="1200.0" cy="1998.0" r="1168.2" fill="url(#glow)"/>
+    
+    <circle cx="1200.0" cy="1998.0" r="412.8" fill="none"
+            stroke="#F2E9DC"
+            stroke-width="3.8"
+            opacity="0.12"/>
+    
+    <circle cx="1200.0" cy="1998.0" r="825.6" fill="none"
+            stroke="#FFC15E"
+            stroke-width="3.8"
+            opacity="0.30"/>
+    
+    <circle cx="1200.0" cy="1998.0" r="1238.4" fill="none"
+            stroke="#F2E9DC"
+            stroke-width="3.8"
+            opacity="0.12"/>
+    
+    
+    <circle cx="1200.0" cy="1998.0" r="1168.2" fill="none"
+            stroke="#FF6B4A" stroke-width="6.9" opacity="0.85"/>
+    
+    <path d="M 291.8 2214.7 L 291.8 1628.6 A 980.4 980.4 0 0 1 2108.2 1628.6 L 2108.2 2214.7" fill="none" stroke="#F2E9DC" stroke-width="3.8" opacity="0.12"/>
+    <line x1="168.0" y1="2214.7" x2="2232.0" y2="2214.7"
+          stroke="#F2E9DC" stroke-width="3.8" opacity="0.30"/>
+
+    
+    <path d="M 701.8 940.8 Q 950.9 861.7 1200.0 1998.0" fill="none"
+          stroke="#FF6B4A"
+          stroke-width="12.0" opacity="0.55" stroke-linecap="round"/>
+    
+    <path d="M 701.8 940.8 Q 950.9 779.9 1200.0 1998.0" fill="none"
+          stroke="#FFC15E"
+          stroke-width="8.4" opacity="0.35" stroke-linecap="round"/>
+    
+    <path d="M 701.8 940.8 Q 950.9 698.1 1200.0 1998.0" fill="none"
+          stroke="#F2E9DC"
+          stroke-width="6.0" opacity="0.16" stroke-linecap="round"/>
+    
+    <path d="M 701.8 940.8 Q 950.9 943.5 1200.0 1998.0" fill="none" stroke="#F2E9DC"
+          stroke-width="20.4" stroke-linecap="round"/>
+
+    <line x1="1076.2" y1="2049.6" x2="1323.8" y2="2049.6"
+          stroke="#F2E9DC" stroke-width="9.2"/>
+    <circle cx="1200.0" cy="1998.0" r="31.0" fill="none"
+            stroke="#F2E9DC" stroke-width="7.7"/>
+    <circle cx="701.8" cy="940.8" r="76.3" fill="none"
+            stroke="#FFC15E" stroke-width="3.8" opacity="0.8"/>
+    <g>
+      <circle cx="701.8" cy="940.8" r="49.2" fill="#FFC15E"/>
+      <g fill="none" stroke="#1A1B26" stroke-width="4.2">
+        <circle cx="701.8" cy="940.8" r="49.2"/>
+        <line x1="652.6" y1="940.8" x2="751.0" y2="940.8"/>
+        <line x1="701.8" y1="891.6" x2="701.8" y2="990.0"/>
+        <path d="M 701.8 891.6 Q 645.2 940.8 701.8 990.0"/>
+        <path d="M 701.8 891.6 Q 758.3 940.8 701.8 990.0"/>
+      </g>
+    </g>
+  </g>
+
+  <line x1="180.0" y1="2736.0" x2="2220.0" y2="2736.0"
+        stroke="#FF6B4A" stroke-width="11.5"/>
+
+  <text x="180.0" y="3184.8" font-family="Anton, Impact, Arial Narrow, sans-serif"
+        font-size="480.0" fill="#F2E9DC">0:09</text>
+
+  <text x="2220.0" y="2923.2" font-family="Space Grotesk, Helvetica, Arial, sans-serif" font-weight="700"
+        font-size="81.6" fill="#F2E9DC" text-anchor="end"
+        letter-spacing="4.1">BROOKLYN 116</text>
+  <text x="2220.0" y="3033.6" font-family="Space Grotesk, Helvetica, Arial, sans-serif" font-weight="700"
+        font-size="81.6" fill="#FFC15E" text-anchor="end"
+        letter-spacing="4.1">SAN ANTONIO 116</text>
+
+  <text x="180.0" y="3412.8" font-family="Space Mono, DejaVu Sans Mono, Courier New, monospace"
+        font-size="38.4" fill="#F2E9DC" opacity="0.65"
+        letter-spacing="6.9">APRIL 3, 2013</text>
+  <text x="2220.0" y="3412.8" font-family="Space Mono, DejaVu Sans Mono, Courier New, monospace"
+        font-size="38.4" fill="#FFC15E" text-anchor="end"
+        letter-spacing="6.9">Q4 — ROUND 2 — GAME 7 — 28 FT</text>
+</svg>

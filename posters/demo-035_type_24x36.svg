@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400.0" height="3600.0" viewBox="0 0 2400.0 3600.0">
+  <rect x="0" y="0" width="2400.0" height="3600.0" fill="#221C35"/>
+
+  
+  <text x="180.0" y="781.2" font-family="Anton, Impact, Arial Narrow, sans-serif"
+        font-size="630.0"
+        fill="#F2ECDF"
+        >1:13</text>
+  
+  <text x="180.0" y="1525.4" font-family="Anton, Impact, Arial Narrow, sans-serif"
+        font-size="629.6"
+        fill="#9B8CFF"
+        >DOWN 9</text>
+  
+  <text x="180.0" y="2005.0" font-family="Anton, Impact, Arial Narrow, sans-serif"
+        font-size="314.8"
+        fill="#F2ECDF"
+        >FROM 24 FEET</text>
+  
+  <text x="180.0" y="2421.7" font-family="Anton, Impact, Arial Narrow, sans-serif"
+        font-size="314.8"
+        fill="#FFB17A"
+        >FOR THE LEAD</text>
+  
+
+  <rect x="0" y="2718.0" width="2400.0" height="306.0" fill="#9B8CFF"/>
+  <text x="1200.0" y="2907.6" font-family="Anton, Impact, Arial Narrow, sans-serif"
+        font-size="107.6" fill="#221C35" text-anchor="middle"
+        letter-spacing="2.2">PORTLAND 122 — SALT LAKE CITY 119</text>
+
+  <g fill="none" stroke="#F2ECDF" stroke-width="5.4" opacity="0.9">
+    <circle cx="1200.0" cy="3159.0" r="72.0"/>
+    <line x1="1128.0" y1="3159.0" x2="1272.0" y2="3159.0"/>
+    <line x1="1200.0" y1="3087.0" x2="1200.0" y2="3231.0"/>
+    <path d="M 1200.0 3087.0 Q 1117.2 3159.0 1200.0 3231.0"/>
+    <path d="M 1200.0 3087.0 Q 1282.8 3159.0 1200.0 3231.0"/>
+  </g>
+
+  <text x="180.0" y="3402.0" font-family="Space Mono, DejaVu Sans Mono, Courier New, monospace"
+        font-size="39.6" fill="#F2ECDF" opacity="0.7"
+        letter-spacing="6.3">MAY 5, 2021</text>
+  <text x="1200.0" y="3402.0" font-family="Space Mono, DejaVu Sans Mono, Courier New, monospace"
+        font-size="39.6" fill="#FFB17A" text-anchor="middle"
+        letter-spacing="6.3">ROUND 1 — GAME 2</text>
+  <text x="2220.0" y="3402.0" font-family="Space Mono, DejaVu Sans Mono, Courier New, monospace"
+        font-size="39.6" fill="#F2ECDF" opacity="0.7" text-anchor="end"
+        letter-spacing="6.3">Q4 — 1:13</text>
+</svg>
